@@ -4,13 +4,13 @@ import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "ht
 
 // 1. CONFIGURAÇÃO DO SEU FIREBASE (Copie do seu console Firebase)
 const firebaseConfig = {
-    apiKey: "AIzaSyCJiEr3q1EqQsrQoXrTFSMp6RJ3biZgFT0",
-    authDomain: "app-obpc-49823.firebaseapp.com",
-    projectId: "app-obpc-49823",
-    storageBucket: "app-obpc-49823.firebasestorage.app",
-    messagingSenderId: "690083146419",
-    appId: "1:690083146419:web:969d599c7f8fe735299ec6",
-    measurementId: "G-ZZ16FVW6JE"
+  apiKey: "AIzaSyDX-zzuYHQ6HQce12CPSke38MuP8k63Zt8",
+  authDomain: "saas-central-manager.firebaseapp.com",
+  projectId: "saas-central-manager",
+  storageBucket: "saas-central-manager.firebasestorage.app",
+  messagingSenderId: "249170676982",
+  appId: "1:249170676982:web:233d1609b9649135f370d7",
+  measurementId: "G-39NX24J8D3"
 };
 
 // Inicializar Firebase
