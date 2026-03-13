@@ -266,32 +266,44 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
     finally { if (btn) { btn.disabled = false; btn.innerText = "Publicar Evento"; } }
 });
 
+// --- FUNÇÃO CORRIGIDA: ATRIBUIÇÃO GLOBAL ---
 window.verInscritos = async (eventoId, titulo) => {
     const modal = document.getElementById('modalVerInscritos');
     const lista = document.getElementById('listaNomesInscritos');
     const tituloModal = document.getElementById('tituloEventoInscritos');
+    
     if (tituloModal) tituloModal.innerText = titulo;
-    if (lista) lista.innerHTML = "<li>Carregando...</li>";
+    if (lista) lista.innerHTML = "<li style='padding:10px;'>Carregando inscritos...</li>";
     if (modal) modal.style.display = 'flex';
+
     try {
+        if (!idClienteDoc) return;
         const q = collection(db, "clientes", idClienteDoc, "eventos", eventoId, "inscritos");
         const snap = await getDocs(q);
+        
         if (snap.empty) {
-            lista.innerHTML = "<li style='padding:10px; color:#888;'>Nenhuma inscrição.</li>";
+            lista.innerHTML = "<li style='padding:10px; color:#888;'>Nenhuma inscrição para este evento.</li>";
         } else {
             lista.innerHTML = "";
-            snap.forEach(doc => {
-                const d = doc.data();
-                lista.innerHTML += `<li style="border-bottom:1px solid #333; padding:10px; display:flex; justify-content:space-between;">
-                    <span>${d.nome || 'Anônimo'}</span>
-                    <small style="color:var(--cor-primaria)">${d.email || ''}</small>
-                </li>`;
+            snap.forEach(docSnap => {
+                const d = docSnap.data();
+                lista.innerHTML += `
+                    <li style="border-bottom:1px solid #333; padding:12px; display:flex; flex-direction:column; gap:4px;">
+                        <span style="font-weight:bold; color:#fff;">${d.nome || 'Anônimo'}</span>
+                        <small style="color:var(--cor-primaria); opacity:0.8;">${d.email || 'Sem e-mail'}</small>
+                    </li>`;
             });
         }
-    } catch (err) { lista.innerHTML = "<li>Erro ao carregar.</li>"; }
+    } catch (err) { 
+        console.error(err);
+        lista.innerHTML = "<li style='padding:10px; color:#ff4444;'>Erro ao carregar lista.</li>"; 
+    }
 };
 
-window.fecharModalInscritos = () => { document.getElementById('modalVerInscritos').style.display = 'none'; };
+window.fecharModalInscritos = () => { 
+    const modal = document.getElementById('modalVerInscritos');
+    if (modal) modal.style.display = 'none'; 
+};
 
 // --- 7. GESTÃO DE OFERTAS ---
 function carregarOfertas() {
