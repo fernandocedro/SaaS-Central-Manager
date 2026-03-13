@@ -214,14 +214,16 @@ window.mostrarSessao = (aba) => {
         carregarAgenda();
     } else if (aba === 'departamentos') {
         carregarDepartamentos();
+    } else if (aba === 'ofertas') {
+        window.carregarOfertas();
     }
-    // Removido a chamada automática de carregarOfertas() para evitar erro se a função não existir
 };
 
-// --- FUNÇÃO DE OFERTAS (ADICIONADA PARA EVITAR ERRO) ---
+// --- FUNÇÃO DE OFERTAS (Vazia para evitar erro de ReferenceError) ---
 window.carregarOfertas = () => {
-    console.log("Sessão de ofertas carregada.");
-    // Aqui as ofertas aparecem via HTML estático como estava antes
+    // Esta função existe apenas para o onclick do HTML não dar erro.
+    // O conteúdo da oferta já está fixo no seu HTML.
+    console.log("Sessão de ofertas aberta.");
 };
 
 // --- DEPARTAMENTOS ---
@@ -353,7 +355,7 @@ window.confirmarInscricao = async () => {
         });
         alert("Inscrição realizada!");
         window.fecharInscricao();
-    } catch (e) { alert("Erro na inscription."); }
+    } catch (e) { alert("Erro na inscrição."); }
 };
 
 // --- LEITURA DIÁRIA ---
