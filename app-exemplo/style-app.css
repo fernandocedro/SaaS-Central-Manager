@@ -310,22 +310,22 @@ body {
 
 /* Cards de Reflexão lado a lado */
 .card-reflexao-premium {
-    min-width: 220px;
-    max-width: 220px;
+    flex: 0 0 220px; /* Trava a largura em 220px, sem crescer nem diminuir */
+    width: 220px;
     background: #111;
     border-radius: 12px;
     overflow: hidden;
-    flex: 0 0 auto;
     cursor: pointer;
     transition: transform 0.2s;
+    border: 1px solid #333; /* Uma bordinha ajuda a separar do fundo preto */
 }
 
 .card-reflexao-premium img {
     width: 100%;
     height: 130px;
     object-fit: cover;
+    display: block; /* Remove espaços vazios abaixo da imagem */
 }
-
 /* Modal Estilo Netflix */
 .modal-premium {
     position: fixed;
@@ -587,4 +587,5 @@ body {
             background: var(--cor-primaria);
             color: white;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+
         }
