@@ -27,7 +27,7 @@ async function otimizarImagem(arquivo) {
     const opcoes = { maxSizeMB: 0.8, maxWidthOrHeight: 1024, useWebWorker: true };
     try {
         // @ts-ignore (Carregado via CDN no HTML)
-        return await imageCompression(arquivo, opcoes);
+        return await window.imageCompression(arquivo, opcoes);
     } catch (error) {
         console.error("Erro na compressão:", error);
         return arquivo;
@@ -38,6 +38,7 @@ const esc = (str) => str ? String(str).replace(/'/g, "\\'").replace(/"/g, "&quot
 
 // --- 2. NAVEGAÇÃO ENTRE ABAS ---
 window.mostrarSessao = (sessao) => {
+    // IDs exatos conforme estão no seu HTML
     const secoesIds = [
         'secaoAdicionar', 'secaoGerenciar', 'secaoNoticias', 
         'secaoEventos', 'secaoOfertas', 'secaoUsuarios', 
@@ -73,17 +74,18 @@ window.mostrarSessao = (sessao) => {
     }
 };
 
-// --- 3. LÓGICA CONDICIONAL ---
+// --- 3. LÓGICA CONDICIONAL (PARA O FORM DE EVENTOS) ---
+// Vinculado aos IDs do seu HTML
 window.toggleInscricao = () => {
-    const check = document.getElementById('checkInscricao') || document.getElementById('eventoRequerInscricao');
-    const bloco = document.getElementById('blocoInscricao') || document.getElementById('campoLinkInscricao');
-    if(bloco && check) bloco.style.display = check.checked ? 'block' : 'none';
+    const check = document.getElementById('eventoRequerInscricao');
+    const campo = document.getElementById('campoLinkInscricao');
+    if(campo && check) campo.style.display = check.checked ? 'block' : 'none';
 };
 
 window.togglePagamento = () => {
-    const check = document.getElementById('checkPago') || document.getElementById('eventoEhPago');
-    const bloco = document.getElementById('blocoPagamento') || document.getElementById('campoValorEvento');
-    if(bloco && check) bloco.style.display = check.checked ? 'block' : 'none';
+    const check = document.getElementById('eventoEhPago');
+    const campo = document.getElementById('campoValorEvento');
+    if(campo && check) campo.style.display = check.checked ? 'block' : 'none';
 };
 
 // --- 4. GESTÃO DE VÍDEOS ---
@@ -219,42 +221,30 @@ document.getElementById('formNoticia')?.addEventListener('submit', async (e) => 
 document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSalvarEvento');
-    const inputImg = document.getElementById('eventoImg');
-    const imgFile = inputImg?.files?.[0];
     
     if (btn) { btn.disabled = true; btn.innerText = "Publicando..."; }
 
     try {
-        let imgUrl = "";
-        if (imgFile) {
-            const arquivoOtimizado = await otimizarImagem(imgFile);
-            const storageRef = ref(storage, `clientes/${idClienteDoc}/eventos/${Date.now()}_${imgFile.name}`);
-            const snapshot = await uploadBytes(storageRef, arquivoOtimizado);
-            imgUrl = await getDownloadURL(snapshot.ref);
-        }
-
-        const temInscricao = document.getElementById('checkInscricao')?.checked || document.getElementById('eventoRequerInscricao')?.checked || false;
-        const eBtnPago = document.getElementById('checkPago')?.checked || document.getElementById('eventoEhPago')?.checked || false;
+        const temInscricao = document.getElementById('eventoRequerInscricao')?.checked || false;
+        const eBtnPago = document.getElementById('eventoEhPago')?.checked || false;
 
         await addDoc(collection(db, "clientes", idClienteDoc, "eventos"), {
             titulo: document.getElementById('eventoTitulo')?.value || "",
+            data: document.getElementById('eventoData')?.value || "",
+            hora: document.getElementById('eventoHora')?.value || "",
+            local: document.getElementById('eventoLocal')?.value || "",
             descricao: document.getElementById('eventoDesc')?.value || "",
-            capa: imgUrl,
             exigeInscricao: temInscricao,
             pago: eBtnPago,
-            linkPagamento: eBtnPago ? (document.getElementById('eventoLinkPagamento')?.value || document.getElementById('eventoValor')?.value) : "",
             linkInscricao: temInscricao ? document.getElementById('eventoLinkInscricao')?.value : "",
+            valor: eBtnPago ? document.getElementById('eventoValor')?.value : "",
             dataCriacao: serverTimestamp()
         });
 
         alert("Evento publicado!");
         e.target.reset();
-        // Esconder blocos condicionais
-        const blocoIns = document.getElementById('blocoInscricao') || document.getElementById('campoLinkInscricao');
-        const blocoPag = document.getElementById('blocoPagamento') || document.getElementById('campoValorEvento');
-        if(blocoIns) blocoIns.style.display = 'none';
-        if(blocoPag) blocoPag.style.display = 'none';
-        
+        window.toggleInscricao(); // Resetar visibilidade dos campos
+        window.togglePagamento();
         carregarEventos();
     } catch (err) { console.error(err); alert("Erro ao publicar evento."); }
     finally { if (btn) { btn.disabled = false; btn.innerText = "Publicar Evento"; } }
@@ -262,7 +252,7 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
 
 function carregarEventos() {
     if (!idClienteDoc) return;
-    const container = document.getElementById('gradeEventos') || document.getElementById('listaEventos');
+    const container = document.getElementById('listaEventos');
     if (!container) return;
 
     const q = query(collection(db, "clientes", idClienteDoc, "eventos"), orderBy("dataCriacao", "desc"));
@@ -270,19 +260,13 @@ function carregarEventos() {
         container.innerHTML = "";
         snapshot.forEach((docSnap) => {
             const ev = docSnap.data();
-            const btnInscritos = ev.exigeInscricao 
-                ? `<button onclick="window.verInscritos('${docSnap.id}')" class="btn-edit-sm" title="Ver Inscritos" style="background: #22c55e;"><i class="fas fa-users"></i></button>` 
-                : '';
-
             container.innerHTML += `
                 <div class="card-video">
-                    <img src="${ev.capa || 'https://placehold.co/300x150/222/white?text=Evento'}" class="thumb-video">
                     <div class="info-video">
                         <h4>${ev.titulo || ''}</h4>
-                        <span class="badge-serie">${ev.exigeInscricao ? "Com Inscrição" : "Evento Aberto"}</span>
-                        <p>${ev.descricao?.substring(0, 60) || ''}...</p>
+                        <span class="badge-serie">${ev.data} - ${ev.hora}</span>
+                        <p>${ev.descricao || ''}</p>
                         <div class="acoes-video">
-                            ${btnInscritos}
                             <button onclick="window.excluirEvento('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
@@ -303,14 +287,10 @@ function carregarOfertas() {
             const of = docSnap.data();
             container.innerHTML += `
                 <div class="card-video">
-                    <img src="${of.capa}" class="thumb-video">
                     <div class="info-video">
                         <h4>${of.titulo || ''}</h4>
-                        <p style="font-size: 12px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${of.link || ''}</p>
+                        <p style="font-size: 12px; color: #888;">${of.link || ''}</p>
                         <div class="acoes-video">
-                            <a href="${of.link}" target="_blank" class="btn-edit-sm" style="background: #eab308; text-decoration: none; display: flex; align-items: center; justify-content: center;" title="Testar Link Externo">
-                                <i class="fas fa-external-link-alt"></i>
-                            </a>
                             <button onclick="window.excluirOferta('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
@@ -321,51 +301,33 @@ function carregarOfertas() {
 
 document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = document.getElementById('btnSalvarOferta');
-    const inputImg = document.getElementById('ofertaImg');
-    const imgFile = inputImg?.files?.[0];
-
+    const btn = e.target.querySelector('button');
     if (btn) { btn.disabled = true; btn.innerText = "Salvando..."; }
 
     try {
-        let imgUrl = "https://placehold.co/300x150/222/white?text=Oferta"; 
-        if (imgFile) {
-            const arquivoOtimizado = await otimizarImagem(imgFile);
-            const storageRef = ref(storage, `clientes/${idClienteDoc}/ofertas/${Date.now()}_${imgFile.name}`);
-            const snapshot = await uploadBytes(storageRef, arquivoOtimizado);
-            imgUrl = await getDownloadURL(snapshot.ref);
-        }
-
         await addDoc(collection(db, "clientes", idClienteDoc, "ofertas"), {
             titulo: document.getElementById('ofertaTitulo')?.value || "",
             link: document.getElementById('ofertaLink')?.value || "",
-            capa: imgUrl,
             dataCriacao: serverTimestamp()
         });
-
         alert("Oferta cadastrada!");
         e.target.reset();
         carregarOfertas();
-    } catch (err) { alert("Erro ao cadastrar oferta."); } 
-    finally { if (btn) { btn.disabled = false; btn.innerText = "Cadastrar Opção de Oferta"; } }
+    } catch (err) { alert("Erro ao cadastrar."); } 
+    finally { if (btn) { btn.disabled = false; btn.innerText = "Adicionar Opção"; } }
 });
 
-// --- 8. GESTÃO DE USUÁRIOS DO APP ---
+// --- 8. GESTÃO DE USUÁRIOS ---
 function carregarUsuariosApp() {
     if (!idClienteDoc) return;
     const q = query(collection(db, "usuarios_app"), where("clienteId", "==", idClienteDoc));
     onSnapshot(q, (snapshot) => {
         const tbody = document.getElementById('tabelaUsuariosBody');
         if (!tbody) return;
-        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center; padding: 20px; color: #888;'>Nenhum membro encontrado.</td></tr>" : "";
-
+        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center;'>Nenhum membro.</td></tr>" : "";
         snapshot.forEach((docSnap) => {
             const user = docSnap.data();
-            let dataFmt = 'Google/Rede Social';
-            if (user.dataCadastro?.toDate) {
-                dataFmt = user.dataCadastro.toDate().toLocaleDateString('pt-BR');
-            }
-            
+            const dataFmt = user.dataCadastro?.toDate ? user.dataCadastro.toDate().toLocaleDateString('pt-BR') : '---';
             tbody.innerHTML += `
                 <tr>
                     <td>${user.nome || 'Usuário'}</td>
@@ -397,10 +359,8 @@ function carregarLeituras() {
                     <div class="info-video">
                         <span class="badge-serie">${dataFmt}</span>
                         <h4>${lei.versos || ''}</h4>
-                        <p>${lei.texto?.substring(0, 100) || ''}...</p>
-                        <div class="acoes-video">
-                            <button onclick="window.excluirLeitura('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
-                        </div>
+                        <p>${lei.texto || ''}</p>
+                        <button onclick="window.excluirLeitura('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>`;
         });
@@ -409,8 +369,6 @@ function carregarLeituras() {
 
 document.getElementById('formLeitura')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = e.target.querySelector('button');
-    if (btn) { btn.disabled = true; btn.innerText = "Salvando..."; }
     try {
         await addDoc(collection(db, "clientes", idClienteDoc, "leituras"), {
             dataLeitura: document.getElementById('leituraData')?.value || "",
@@ -418,11 +376,9 @@ document.getElementById('formLeitura')?.addEventListener('submit', async (e) => 
             texto: document.getElementById('leituraTexto')?.value || "",
             dataCriacao: serverTimestamp()
         });
-        alert("Leitura agendada!");
+        alert("Agendado!");
         e.target.reset();
-        carregarLeituras();
-    } catch (err) { alert("Erro ao salvar leitura."); }
-    finally { if (btn) { btn.disabled = false; btn.innerText = "Agendar Leitura"; } }
+    } catch (err) { alert("Erro ao salvar."); }
 });
 
 // --- 10. GESTÃO DE ORAÇÕES ---
@@ -432,19 +388,16 @@ function carregarOracoes() {
     if (!tbody) return;
     const q = query(collection(db, "clientes", idClienteDoc, "pedidos_oracao"), orderBy("dataCriacao", "desc"));
     onSnapshot(q, (snapshot) => {
-        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center;'>Nenhum pedido recebido.</td></tr>" : "";
+        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center;'>Nenhum pedido.</td></tr>" : "";
         snapshot.forEach((docSnap) => {
             const ora = docSnap.data();
-            let dataFmt = '---';
-            if (ora.dataCriacao) {
-                const d = ora.dataCriacao.toDate ? ora.dataCriacao.toDate() : new Date(ora.dataCriacao);
-                dataFmt = d.toLocaleDateString('pt-BR') + " " + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            }
+            const d = ora.dataCriacao?.toDate ? ora.dataCriacao.toDate() : new Date();
+            const dataFmt = d.toLocaleDateString('pt-BR');
             tbody.innerHTML += `
                 <tr>
-                    <td style="font-size: 0.85rem; color: #888;">${dataFmt}</td>
-                    <td><strong>${ora.nome || 'Anônimo'}</strong></td>
-                    <td style="max-width: 350px; white-space: normal; line-height: 1.4;">${ora.pedido || 'Sem texto'}</td>
+                    <td>${dataFmt}</td>
+                    <td>${ora.nome || 'Anônimo'}</td>
+                    <td>${ora.pedido || ''}</td>
                     <td><button onclick="window.excluirOracao('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button></td>
                 </tr>`;
         });
@@ -455,18 +408,15 @@ function carregarOracoes() {
 document.getElementById('formPush')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!confirm("Enviar notificação para todos?")) return;
-    const btn = e.target.querySelector('button');
-    if (btn) { btn.disabled = true; btn.innerText = "Enviando..."; }
     try {
         await addDoc(collection(db, "clientes", idClienteDoc, "notificacoes_push"), {
             titulo: document.getElementById('pushTitulo')?.value || "",
             mensagem: document.getElementById('pushMensagem')?.value || "",
             dataEnvio: serverTimestamp()
         });
-        alert("Notificação enviada!");
+        alert("Enviado!");
         e.target.reset();
-    } catch (err) { alert("Erro ao enviar push."); }
-    finally { if (btn) { btn.disabled = false; btn.innerText = "Disparar Notificação"; } }
+    } catch (err) { alert("Erro ao enviar."); }
 });
 
 // --- 12. CORE (AUTH E IDENTIDADE) ---
@@ -477,7 +427,8 @@ async function buscarDadosCliente(userUid) {
         const docSnap = querySnapshot.docs[0];
         idClienteDoc = docSnap.id;
         aplicarIdentidadeVisual(docSnap.data());
-        carregarVideos(); 
+        // Carrega a aba inicial (Vídeos)
+        window.mostrarSessao('add');
     }
 }
 
@@ -491,7 +442,7 @@ function aplicarIdentidadeVisual(dados) {
 
 onAuthStateChanged(auth, (user) => {
     if (!user) {
-        if (!window.location.href.includes("login-cliente.html")) window.location.href = "login-cliente.html";
+        window.location.href = "login-cliente.html";
     } else {
         buscarDadosCliente(user.uid);
     }
@@ -501,23 +452,22 @@ onAuthStateChanged(auth, (user) => {
 window.excluirVideo = async (id) => { if (confirm("Excluir vídeo?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "conteudos", id)); };
 window.excluirNoticia = async (id) => { if (confirm("Excluir notícia?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "noticias", id)); };
 window.excluirEvento = async (id) => { if (confirm("Excluir evento?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "eventos", id)); };
-window.excluirOferta = async (id) => { if (confirm("Deseja remover esta opção de oferta?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "ofertas", id)); };
+window.excluirOferta = async (id) => { if (confirm("Remover oferta?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "ofertas", id)); };
 window.excluirLeitura = async (id) => { if (confirm("Excluir leitura?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "leituras", id)); };
-window.excluirOracao = async (id) => { if (confirm("Excluir permanentemente?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id)); };
+window.excluirOracao = async (id) => { if (confirm("Excluir oração?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id)); };
 
 window.prepararEdicaoVideo = (id, serie, desc) => {
-    if (document.getElementById('editVideoId')) document.getElementById('editVideoId').value = id;
-    if (document.getElementById('editVideoSerie')) document.getElementById('editVideoSerie').value = serie;
-    if (document.getElementById('editVideoDesc')) document.getElementById('editVideoDesc').value = desc;
-    if (document.getElementById('modalEditarVideo')) document.getElementById('modalEditarVideo').style.display = 'flex';
+    document.getElementById('editVideoId').value = id;
+    document.getElementById('editVideoSerie').value = serie;
+    document.getElementById('editVideoDesc').value = desc;
+    document.getElementById('modalEditarVideo').style.display = 'flex';
 };
 
-window.fecharModalEdicao = () => { if(document.getElementById('modalEditarVideo')) document.getElementById('modalEditarVideo').style.display = 'none'; };
+window.fecharModalEdicao = () => { document.getElementById('modalEditarVideo').style.display = 'none'; };
 
 document.getElementById('formEditarVideo')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('editVideoId')?.value;
-    if (!id) return;
     try {
         await updateDoc(doc(db, "clientes", idClienteDoc, "conteudos", id), {
             serie: document.getElementById('editVideoSerie')?.value || "",
@@ -529,14 +479,15 @@ document.getElementById('formEditarVideo')?.addEventListener('submit', async (e)
 
 window.logoutCliente = () => { if(confirm("Sair?")) signOut(auth).then(() => window.location.href = "login-cliente.html"); };
 
-// Adicione as funções de modal faltantes se necessário
 window.abrirModalGerenciarUsuario = (id, nome, email) => {
-    if (document.getElementById('editUserId')) document.getElementById('editUserId').value = id;
-    if (document.getElementById('editUserNome')) document.getElementById('editUserNome').innerText = nome;
-    if (document.getElementById('editUserEmail')) document.getElementById('editUserEmail').innerText = email;
-    if (document.getElementById('modalGerenciarUsuario')) document.getElementById('modalGerenciarUsuario').style.display = 'flex';
+    document.getElementById('editUserId').value = id;
+    document.getElementById('editUserNome').innerText = nome;
+    document.getElementById('editUserEmail').innerText = email;
+    document.getElementById('modalGerenciarUsuario').style.display = 'flex';
 };
-window.fecharModalGerenciarUsuario = () => {
-    const modal = document.getElementById('modalGerenciarUsuario');
-    if (modal) modal.style.display = 'none';
+
+window.abrirModalSenha = () => {
+    if(confirm("Deseja alterar sua senha? Enviaremos um e-mail de recuperação.")) {
+        sendPasswordResetEmail(auth, auth.currentUser.email).then(() => alert("E-mail enviado!"));
+    }
 };
