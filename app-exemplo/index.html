@@ -7,6 +7,27 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style-app.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script>
+    // Roda antes de desenhar a página
+    const corSalva = localStorage.getItem('cache_cor'); // Use o mesmo nome que está no seu JS
+    const logoSalvo = localStorage.getItem('cache_logo');
+
+    if (corSalva) {
+        document.documentElement.style.setProperty('--cor-primaria', corSalva);
+        document.documentElement.style.setProperty('--texto-bronze', corSalva);
+    }
+    
+    // Aplica a logo nos lugares certos se já existir no cache
+    window.addEventListener('DOMContentLoaded', () => {
+        if (logoSalvo) {
+            const logos = ['authLogo', 'appLogoSide'];
+            logos.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.src = logoSalvo;
+            });
+        }
+    });
+</script>
 </head>
 <body>
     <div id="authContainer" class="auth-overlay" style="display: flex;">
@@ -177,6 +198,19 @@
 
         <section id="sessaoPerfil" style="display: none; padding: 15px;">
             <h3 class="titulo-bronze">Meu Perfil</h3>
+            
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="position: relative; display: inline-block;">
+                    <img src="https://placehold.co/150" id="fotoPreviewPerfil" style="width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid var(--cor-primaria);">
+                    
+                    <label for="inputFotoApp" style="position: absolute; bottom: 0; right: 0; background: var(--cor-primaria); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #1a1a1a;">
+                        <i class="fas fa-camera" style="color: white; font-size: 0.9rem;"></i>
+                    </label>
+                    
+                    <input type="file" id="inputFotoApp" accept="image/*" style="display: none;" onchange="window.gerenciarUploadFoto(event)">
+                </div>
+                <p style="color: #888; font-size: 0.75rem; margin-top: 8px;">Toque na câmera para alterar foto</p>
+            </div>
             <div class="perfil-container-premium">
                 <div class="grupo-input">
                     <label>Nome Completo</label>
