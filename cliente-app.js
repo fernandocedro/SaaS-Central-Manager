@@ -21,7 +21,7 @@ const storage = getStorage(app);
 let idClienteDoc = null; 
 let todosOsVideos = []; 
 
-// --- FUNÇÃO DE APOIO: COMPRESSÃO DE IMAGENS (Resolve o erro de 1800ms) ---
+// --- FUNÇÃO DE APOIO: COMPRESSÃO DE IMAGENS ---
 async function otimizarImagem(arquivo) {
     if (!arquivo || !arquivo.type.startsWith('image/')) return arquivo;
     const opcoes = {
@@ -30,7 +30,7 @@ async function otimizarImagem(arquivo) {
         useWebWorker: true
     };
     try {
-        // @ts-ignore (A biblioteca é carregada via CDN no HTML)
+        // @ts-ignore (Carregado via CDN no HTML: browser-image-compression)
         return await imageCompression(arquivo, opcoes);
     } catch (error) {
         console.error("Erro na compressão, enviando original:", error);
@@ -147,7 +147,6 @@ document.getElementById('formConteudo')?.addEventListener('submit', async (e) =>
         if (thumbFile) {
             btn.innerText = "Otimizando Imagem...";
             const arquivoOtimizado = await otimizarImagem(thumbFile);
-            
             const storageRef = ref(storage, `clientes/${idClienteDoc}/conteudos/${Date.now()}_${thumbFile.name}`);
             btn.innerText = "Enviando...";
             const snapshot = await uploadBytes(storageRef, arquivoOtimizado);
@@ -393,20 +392,24 @@ window.excluirOferta = async (id) => {
     if (confirm("Deseja remover esta opção de oferta?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "ofertas", id));
 };
 
-// --- 8. GESTÃO DE USUÁRIOS DO APP ---
+// --- 8. GESTÃO DE USUÁRIOS DO APP (CORRIGIDO) ---
 function carregarUsuariosApp() {
     if (!idClienteDoc) return;
-    const q = query(collection(db, "usuarios_app"), where("clienteId", "==", idClienteDoc), orderBy("dataCadastro", "desc"));
+    
+    // Removido o orderBy caso o índice ainda não tenha sido criado no Firebase Console
+    const q = query(collection(db, "usuarios_app"), where("clienteId", "==", idClienteDoc));
     
     onSnapshot(q, (snapshot) => {
         const tbody = document.getElementById('tabelaUsuariosBody');
         if (!tbody) return;
-        tbody.innerHTML = "";
+        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center; padding: 20px; color: #888;'>Nenhum membro encontrado.</td></tr>" : "";
 
         snapshot.forEach((docSnap) => {
             const user = docSnap.data();
-            const dataFmt = user.dataCadastro ? user.dataCadastro.toDate().toLocaleDateString('pt-BR') : '---';
-            const nomeLimpo = (user.nome||"Membro").replace(/'/g, "\\'");
+            const dataFmt = user.dataCadastro ? 
+                (user.dataCadastro.toDate ? user.dataCadastro.toDate().toLocaleDateString('pt-BR') : '---') 
+                : '---';
+            const nomeLimpo = (user.nome || "Membro").replace(/'/g, "\\'");
             
             tbody.innerHTML += `
                 <tr>
@@ -580,7 +583,7 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// FUNÇÕES GLOBAIS
+// FUNÇÕES GLOBAIS DE EXCLUSÃO
 window.excluirVideo = async (id) => { if (confirm("Excluir vídeo?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "conteudos", id)); };
 window.excluirNoticia = async (id) => { if (confirm("Excluir notícia?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "noticias", id)); };
 window.excluirEvento = async (id) => { if (confirm("Excluir evento?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "eventos", id)); };
