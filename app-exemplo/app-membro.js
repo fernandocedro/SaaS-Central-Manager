@@ -33,7 +33,6 @@ const livrosBiblia = [
 
 let livroSelecionado = "";
 let unsubscribeAnotacoes = null;
-let unsubscribeOracoes = null;
 let filtroLeituraAtual = 'pendentes';
 let leiturasCache = [];
 
@@ -201,7 +200,7 @@ window.mostrarSessao = (aba) => {
     } else if (aba === 'agenda') {
         carregarAgenda();
     } else if (aba === 'ofertas') {
-        carregarOfertas(); // <--- Chamada para carregar dízimos
+        carregarOfertas();
     }
 };
 
@@ -309,7 +308,7 @@ window.confirmarInscricao = async () => {
         });
         alert("Inscrição realizada!");
         window.fecharInscricao();
-    } catch (e) { alert("Erro na inscrição."); }
+    } catch (e) { alert("Erro na inscription."); }
 };
 
 // --- LEITURA DIÁRIA ---
@@ -494,17 +493,22 @@ window.buscarBiblia = async (tipo, valorManual = null) => {
     } catch (e) { resContainer.innerHTML = "Erro ao buscar."; }
 };
 
-// --- NOTÍCIAS ---
+// --- NOTÍCIAS / REFLEXÕES ---
 async function carregarNoticiasHome() {
     if (!idCliente) return;
-    const q = query(collection(db, "clientes", idCliente, "noticias"), orderBy("dataCriacao", "desc"), limit(4));
+    const q = query(collection(db, "clientes", idCliente, "noticias"), orderBy("dataCriacao", "desc"), limit(6));
     const snap = await getDocs(q);
     const container = document.getElementById('gradeNoticias');
     if(!container) return;
     container.innerHTML = "";
     snap.forEach((doc) => {
         const n = doc.data();
-        container.innerHTML += `<div class="card-video-premium" onclick="window.abrirReflexao('${JSON.stringify(n).replace(/"/g, '&quot;')}')"><img src="${n.capa}"><div class="video-info">${n.titulo}</div></div>`;
+        // AQUI: Usando a classe 'card-reflexao-premium' para as duas colunas
+        container.innerHTML += `
+            <div class="card-reflexao-premium" onclick="window.abrirReflexao('${JSON.stringify(n).replace(/"/g, '&quot;')}')">
+                <img src="${n.capa}">
+                <div class="video-info">${n.titulo}</div>
+            </div>`;
     });
 }
 
