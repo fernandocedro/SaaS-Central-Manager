@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Membro</title>
+    <link rel="stylesheet" href="style-app.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="authContainer" class="auth-overlay" style="display: flex;">
+        <div class="auth-box">
+            <img src="" id="authLogo" class="auth-logo-preview">
+            
+            <h2 id="authTitulo">Bem-vindo</h2>
+            <p id="authSubtitulo">Acesse sua conta para continuar</p>
+
+            <form id="formAuth">
+                <input type="text" id="authNome" placeholder="Seu nome completo" style="display: none;">
+                <input type="email" id="authEmail" placeholder="Seu e-mail" required autocomplete="email">
+                <input type="password" id="authSenha" placeholder="Sua senha" required autocomplete="current-password">
+                <button type="submit" id="btnAuthPrincipal" class="btn-acao">Entrar</button>
+            </form>
+
+            <div style="margin: 20px 0; display: flex; align-items: center; color: #666; font-size: 0.8rem;">
+                <hr style="flex: 1; border: 0; border-top: 1px solid #333;">
+                <span style="padding: 0 10px;">ou acesse com</span>
+                <hr style="flex: 1; border: 0; border-top: 1px solid #333;">
+            </div>
+
+            <button onclick="window.loginGoogle()" class="btn-google" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #444; background: #fff; color: #000; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; margin-bottom: 20px;">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" width="20">
+                Google
+            </button>
+
+            <div class="auth-footer-links" style="text-align: center; font-size: 0.9rem;">
+                <p id="toggleAuthText">
+                    Não tem conta? <a href="#" onclick="window.mudarModoAuth('cadastro')" style="color: var(--cor-primaria); text-decoration: none; font-weight: bold;">Cadastre-se</a>
+                </p>
+                <p id="linkRecuperar">
+                    <a href="#" onclick="window.mudarModoAuth('recuperar')" style="color: #bbb; text-decoration: none; font-size: 0.8rem;">Esqueci minha senha</a>
+                </p>
+                <p id="linkVoltarLogin" style="display: none;">
+                    <a href="#" onclick="window.mudarModoAuth('login')" style="color: var(--cor-primaria); text-decoration: none; font-weight: bold;">Voltar para o Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <header class="app-header-premium">
+        <div class="perfil-info">
+            <div class="avatar-container">
+                <img src="https://placehold.co/150" id="fotoMembro" class="avatar-img">
+            </div>
+            <div class="welcome-text">
+                <h2 id="nomeMembro">Membro</h2> <span>Olá!</span>
+            </div>
+        </div>
+        <button onclick="window.toggleMenu()" class="btn-menu-lateral">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
+
+    <nav id="menuLateral" class="drawer">
+        <div class="drawer-content">
+            <div class="drawer-header">
+                <h3 class="titulo-bronze">Menu</h3>
+            </div>
+            <ul class="menu-links">
+                <li onclick="window.mostrarSessao('home')"><i class="fas fa-home"></i> Início</li>
+                <li onclick="window.mostrarSessao('notificacoes')"><i class="fas fa-bell"></i> Notificações</li>
+                <li onclick="window.mostrarSessao('biblia')"><i class="fas fa-book-bible"></i> Bíblia</li>
+                <li onclick="window.mostrarSessao('agenda')"><i class="fas fa-calendar-alt"></i> Agenda</li>
+                <li onclick="window.mostrarSessao('leitura')"><i class="fas fa-calendar-check"></i> Leitura Diária</li>
+                <li onclick="window.mostrarSessao('oracao')"><i class="fas fa-hands-praying"></i> Oração</li>
+                <li onclick="window.mostrarSessao('videos')"><i class="fas fa-play-circle"></i> Vídeos</li>
+                <li onclick="window.mostrarSessao('departamentos')"><i class="fas fa-sitemap"></i> Departamentos</li>
+                <li onclick="window.mostrarSessao('perfil')"><i class="fas fa-user-gear"></i> Meu Perfil</li>
+            </ul>
+        </div>
+        <div class="drawer-footer">
+            <div class="footer-info">
+                <img src="" id="appLogoSide" class="logo-side-mini" alt="Igreja">
+                <div class="footer-user">
+                    <img src="https://placehold.co/150" id="fotoMembroMenu" class="avatar-mini">
+                </div>
+            </div>
+            <button onclick="window.logoutCliente()" class="btn-sair-drawer">
+                <i class="fas fa-sign-out-alt"></i> Sair da conta
+            </button>
+        </div>
+    </nav>
+
+    <main class="main-content" id="fluxoPrincipal">
+        
+        <div id="sessaoHome">
+            <section class="home-section">
+                <h3 class="titulo-bronze">Últimos Vídeos:</h3>
+                <div id="gradeVideos" class="carousel-horizontal"></div>
+            </section>
+
+            <section class="home-section">
+                <h3 class="titulo-bronze">Reflexões:</h3>
+                <div id="gradeNoticias" class="carousel-horizontal"></div>
+            </section>
+        </div>
+
+        <section id="sessaoAgenda" style="display: none; padding: 15px;">
+            <h3 class="titulo-bronze">Agenda de Eventos</h3>
+            <div id="listaEventos" class="agenda-container">
+                </div>
+        </section>
+
+        <section id="sessaoBiblia" class="home-section" style="display: none;">
+            <h3 class="titulo-bronze">Bíblia Sagrada</h3>
+            <div style="margin-bottom: 15px;">
+                <button onclick="window.abrirSeletorLivros()" class="btn-nav-bible" id="btnNavegarRef" style="width: 100%; height: 50px; border-radius: 10px; border: none; background: var(--cor-primaria); color: white; font-weight: bold; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;">
+                    <i class="fas fa-book-open"></i> <span id="labelNavegacao">Gênesis 1</span>
+                </button>
+            </div>
+            <div class="bible-search-box">
+                <div class="search-group">
+                    <input type="text" id="inputPalavra" placeholder="Buscar por palavra (ex: Fé, Amor)">
+                    <button onclick="window.buscarBiblia('palavra')" class="btn-search">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="containerSelecao" class="bible-grid-selection" style="display: none; margin-top: 15px;"></div>
+            <div id="resultadoBiblia" class="bible-results" style="margin-top: 20px;"></div>
+        </section>
+
+        <section id="sessaoNotificacoes" style="display: none; padding: 15px;"><h3 class="titulo-bronze">Notificações</h3><div id="listaNotificacoes"></div></section>
+        
+        <section id="sessaoLeitura" style="display: none; padding: 15px;">
+            <h3 class="titulo-bronze">Leitura Diária</h3>
+            
+            <div class="container-filtros-leitura">
+                <button onclick="window.filtrarLeitura('pendentes')" id="tabPendentes" class="btn-sub-tab active">
+                    <i class="fas fa-book"></i> Disponíveis
+                </button>
+                <button onclick="window.filtrarLeitura('lidas')" id="tabLidas" class="btn-sub-tab">
+                    <i class="fas fa-check-circle"></i> Lidas
+                </button>
+            </div>
+
+            <div id="listaLeituraContainer"></div>
+        </section>
+
+        <section id="sessaoOracao" style="display: none; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 25px;">
+                <i class="fas fa-hands-helping" style="font-size: 2.5rem; color: var(--cor-primaria); margin-bottom: 15px;"></i>
+                <h2 style="color: #fff;">Pedido de Oração</h2>
+                <p style="color: #bbb; font-size: 0.9rem;">Compartilhe seu fardo conosco. Estaremos orando por você.</p>
+            </div>
+
+            <div style="background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #333;">
+                <div style="margin-bottom: 15px;">
+                    <label style="color: var(--cor-primaria); display: block; margin-bottom: 8px; font-weight: bold;">Seu Nome</label>
+                    <input type="text" id="oracaoNome" placeholder="Digite seu nome completo" 
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; outline: none;">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="color: var(--cor-primaria); display: block; margin-bottom: 8px; font-weight: bold;">Motivo da Oração</label>
+                    <textarea id="oracaoTexto" rows="5" placeholder="Escreva aqui seu pedido..." 
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; outline: none; resize: none;"></textarea>
+                </div>
+
+                <button id="btnEnviarOracao" onclick="window.enviarPedidoOracao()" 
+                    style="width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--cor-primaria); color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem;">
+                    <i class="fas fa-paper-plane"></i> Enviar Pedido
+                </button>
+
+                <div id="msgSucessoOracao" style="display: none; background: #1b4332; color: #d8f3dc; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #2d6a4f;">
+                    <i class="fas fa-check-circle"></i> Pedido enviado com sucesso! Deus te abençoe.
+                </div>
+            </div>
+        </section>
+
+        <section id="sessaoDepartamentos" style="display: none; padding: 15px;"><h3 class="titulo-bronze">Departamentos</h3></section>
+        <section id="sessaoPerfil" style="display: none; padding: 15px;"><h3 class="titulo-bronze">Meu Perfil</h3></section>
+        <section id="sessaoVideos" style="display: none; padding: 15px;"><h3 class="titulo-bronze">Vídeos</h3><div id="gradeVideosCompleta"></div></section>
+        <section id="sessaoOfertas" style="display: none; padding: 15px;"><h3 class="titulo-bronze">Ofertas e Dízimos</h3></section>
+
+        <section id="sessaoAnotacoes" class="home-section" style="display: none; padding: 10px;">
+            <h3 class="titulo-bronze">Minhas Anotações</h3>
+            <div id="gradeAnotacoes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;"></div>
+
+            <button onclick="window.abrirModalNota()" style="position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--cor-primaria); color: white; border: none; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 100; cursor: pointer;">
+                <i class="fas fa-plus"></i>
+            </button>
+        </section>
+
+    </main>
+
+    <div id="modalNota" class="modal-premium" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: #1a1a1a; width: 90%; max-width: 500px; border-radius: 15px; padding: 20px; border: 1px solid #333;">
+            <input type="hidden" id="notaId"> 
+            <input type="text" id="notaTitulo" placeholder="Título da Anotação" style="width: 100%; background: #222; border: 1px solid #444; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 1.1rem; outline: none;">
+            <textarea id="notaTexto" placeholder="Escreva aqui sua reflexão..." style="width: 100%; height: 200px; background: #222; border: 1px solid #444; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; resize: none; font-family: sans-serif; outline: none;"></textarea>
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="window.salvarNota()" style="flex: 2; background: var(--cor-primaria); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">Salvar</button>
+                <button id="btnExcluirNota" onclick="window.excluirNota()" style="flex: 1; background: #c0392b; color: white; border: none; padding: 12px; border-radius: 8px; display: none; cursor: pointer;">Excluir</button>
+                <button onclick="window.fecharModalNota()" style="flex: 1; background: #444; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalReflexao" class="modal-premium" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal" onclick="window.fecharReflexao()">&times;</span>
+            <div class="modal-capa-container">
+                <img id="modalImagem" src="" class="modal-capa">
+            </div>
+            <div class="modal-body">
+                <h2 id="modalTitulo"></h2>
+                <hr class="divisor-modal">
+                <div id="modalTexto" class="modal-texto"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalVideo" class="modal-premium" style="display: none;">
+        <div class="modal-content" style="padding: 0; background: #000; max-width: 800px; border: none;">
+            <span class="close-modal" onclick="window.fecharVideo()" style="color: #fff; right: 15px; top: 10px; z-index: 10;">&times;</span>
+            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                <iframe id="iframeVideo" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <nav class="tab-bar">
+        <button onclick="window.mostrarSessao('home')" id="btnHome" class="active">
+            <i class="fas fa-home"></i>
+            <span>Início</span>
+        </button>
+        <button onclick="window.mostrarSessao('videos')" id="btnVideos">
+            <i class="fas fa-play-circle"></i>
+            <span>Vídeos</span>
+        </button>
+        <button onclick="window.mostrarSessao('anotacoes')" id="btnAnotacoes">
+            <i class="fas fa-pen-nib"></i>
+            <span>Notas</span>
+        </button>
+        <button onclick="window.mostrarSessao('ofertas')" id="btnOfertas">
+            <i class="fas fa-hand-holding-heart"></i>
+            <span>Ofertas</span>
+        </button>
+    </nav>
+
+    <script type="module" src="app-membro.js"></script>
+    <script>
+        window.toggleMenu = () => {
+            document.getElementById('menuLateral').classList.toggle('active');
+        };
+        
+        document.querySelectorAll('.drawer li').forEach(item => {
+            item.addEventListener('click', () => {
+                document.getElementById('menuLateral').classList.remove('active');
+            });
+        });
+
+        window.onclick = function(event) {
+            const modRef = document.getElementById('modalReflexao');
+            const modVid = document.getElementById('modalVideo');
+            const modNot = document.getElementById('modalNota');
+            if (event.target == modRef) window.fecharReflexao();
+            if (event.target == modVid) window.fecharVideo();
+            if (event.target == modNot) window.fecharModalNota();
+        }
+    </script>
+</body>
+</html>

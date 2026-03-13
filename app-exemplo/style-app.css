@@ -1,0 +1,590 @@
+/* --- 1. VARIÁVEIS E RESET --- */
+:root {
+    --cor-primaria: #2563eb;    /* Dinâmico via Super Admin */
+    --bg-app: #0a0a0a;          /* Fundo preto profundo */
+    --card-bg: #161616;         /* Cinza muito escuro para os cards */
+    --texto-bronze: #d4a373;    /* Cor dos títulos das seções (conforme imagem) */
+    --texto-principal: #ffffff;
+    --texto-secundario: #888888;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg-app);
+    color: var(--texto-principal);
+    padding-bottom: 90px; /* Espaço para a tab-bar inferior */
+    overflow-x: hidden;
+}
+
+/* --- 2. HEADER DE PERFIL (IGUAL À IMAGEM) --- */
+.app-header-premium {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px 20px 10px 20px;
+    background: var(--bg-app);
+}
+
+.perfil-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.avatar-container {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid var(--cor-primaria);
+    overflow: hidden;
+    background: #222;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.welcome-text span {
+    color: var(--texto-secundario);
+    font-size: 0.85rem;
+    display: block;
+    margin-bottom: -4px;
+}
+
+.welcome-text h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.btn-menu-lateral {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+/* --- 3. MENU LATERAL (DRAWER) --- */
+.drawer {
+    position: fixed;
+    top: 0;
+    right: -280px;
+    width: 280px;
+    height: 100%;
+    background: #111;
+    z-index: 2000;
+    transition: 0.3s ease;
+    padding: 40px 20px;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+}
+
+.drawer.active {
+    right: 0;
+}
+
+.drawer ul {
+    list-style: none;
+    margin-top: 20px;
+}
+
+.drawer li {
+    padding: 15px 0;
+    border-bottom: 1px solid #222;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.drawer li i {
+    color: var(--cor-primaria);
+}
+
+/* --- 4. SEÇÕES E CARROSSEL (SCROLL HORIZONTAL) --- */
+.main-content {
+    padding: 10px 0;
+}
+
+.home-section {
+    margin-top: 25px;
+}
+
+.titulo-bronze {
+    padding: 0 20px;
+    font-size: 1.3rem;
+    color: var(--texto-bronze);
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.carousel-horizontal {
+    display: flex;
+    overflow-x: auto;
+    padding: 0 20px 20px 20px;
+    gap: 15px;
+    scrollbar-width: none; /* Firefox */
+}
+
+.carousel-horizontal::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+/* --- 5. CARDS PREMIUM (IDÊNTICO À IMAGEM) --- */
+.card-video-premium {
+    min-width: 280px;
+    background: #000;
+    border-radius: 15px;
+    overflow: hidden;
+    flex: 0 0 auto;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    position: relative;
+    cursor: pointer;
+}
+
+.card-video-premium img {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    display: block;
+}
+
+.video-info {
+    padding: 15px;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #fff;
+}
+
+/* A barrinha de detalhe no fundo do card */
+.barra-detalhe {
+    height: 4px;
+    width: 100%;
+    background-color: var(--texto-bronze); /* Ou use var(--cor-primaria) se preferir */
+}
+
+/* --- 6. TAB BAR INFERIOR (FLUTUANTE) --- */
+.tab-bar {
+    position: fixed;
+    bottom: 15px;
+    left: 5%;
+    width: 90%;
+    height: 65px;
+    background: rgba(20, 20, 20, 0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-radius: 35px;
+    border: 1px solid rgba(255,255,255,0.05);
+    z-index: 1000;
+}
+
+.tab-bar button {
+    background: none;
+    border: none;
+    color: #666;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 0.7rem;
+    gap: 4px;
+}
+
+.tab-bar button i {
+    font-size: 1.3rem;
+}
+
+.tab-bar button.active {
+    color: var(--cor-primaria);
+}
+
+/* --- 7. AUTH OVERLAY (LOGIN) --- */
+.auth-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-app);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-box {
+    background: #1a1a1a;
+    width: 100%;
+    max-width: 380px;
+    padding: 40px 30px;
+    border-radius: 25px;
+    text-align: center;
+}
+
+.auth-box input {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border: 1px solid #333;
+    background: #000;
+    color: white;
+}
+
+.btn-acao {
+    width: 100%;
+    padding: 15px;
+    border-radius: 10px;
+    border: none;
+    background-color: var(--cor-primaria);
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+/* Container flexível para o menu lateral */
+.drawer {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.drawer-content {
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+/* Rodapé do Menu Lateral */
+.drawer-footer {
+    padding: 20px;
+    border-top: 1px solid #222;
+    background: #111;
+}
+
+.footer-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.avatar-mini {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--cor-primaria);
+    object-fit: cover;
+}
+
+.logo-side-mini {
+    max-width: 80px;
+    max-height: 40px;
+    object-fit: contain;
+}
+
+.btn-sair-drawer {
+    width: 100%;
+    background: transparent;
+    border: 1px solid #ff4444;
+    color: #ff4444;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Cards de Reflexão lado a lado */
+.card-reflexao-premium {
+    min-width: 220px;
+    max-width: 220px;
+    background: #111;
+    border-radius: 12px;
+    overflow: hidden;
+    flex: 0 0 auto;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.card-reflexao-premium img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+}
+
+/* Modal Estilo Netflix */
+.modal-premium {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 5000;
+    display: none;
+    justify-content: center;
+    align-items: flex-start;
+    overflow-y: auto;
+    padding-top: 20px;
+}
+
+.modal-content {
+    background: #111;
+    width: 95%;
+    max-width: 600px;
+    border-radius: 15px;
+    position: relative;
+    padding-bottom: 30px;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 30px;
+    color: white;
+    z-index: 10;
+    cursor: pointer;
+}
+
+.modal-capa {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 15px 15px 0 0;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.modal-body h2 {
+    color: var(--cor-primaria);
+    margin-bottom: 15px;
+}
+
+.modal-texto {
+    line-height: 1.6;
+    color: #ccc;
+    font-size: 1.1rem;
+}
+
+.bible-search-box {
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 12px;
+    margin: 10px 0;
+}
+
+.search-group {
+    display: flex;
+    gap: 8px;
+}
+
+.search-group input {
+    flex: 1;
+    background: #000;
+    border: 1px solid #333;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.btn-search {
+    background: var(--cor-primaria);
+    color: white;
+    border: none;
+    padding: 0 15px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.verse-card-full {
+    background: #111;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 4px solid var(--cor-primaria);
+    margin-top: 15px;
+}
+
+.verse-card-full small {
+    color: var(--cor-primaria);
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.verse-card-full p {
+    margin-top: 10px;
+    line-height: 1.6;
+    font-size: 1.1rem;
+}
+
+.btn-copy {
+    margin-top: 15px;
+    background: transparent;
+    border: 1px solid #444;
+    color: #888;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.bible-nav-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.btn-nav-bible {
+    flex: 1;
+    background: var(--cor-primaria);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+.bible-grid-selection {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 colunas para livros */
+    gap: 10px;
+    background: #161616;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+.bible-grid-selection button {
+    padding: 15px 5px;
+    background: #222;
+    color: #fff;
+    border: 1px solid #333;
+    border-radius: 5px;
+    font-size: 13px;
+}
+
+/* Efeito de Play na Thumbnail */
+.thumb-container {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.play-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    opacity: 0.8;
+    transition: 0.3s;
+}
+
+.card-video-premium:hover .play-overlay {
+    background: rgba(0,0,0,0.1);
+    transform: scale(1.1);
+}
+
+/* Modal responsivo para vídeo */
+.video-wrapper iframe {
+    border-radius: 8px;
+}
+
+/* Card da Nota (Ajustado para o grid de 2x2) */
+.card-nota {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 12px;
+    height: 160px; /* Altura fixa para manter o alinhamento 2x2 */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.nota-item-titulo {
+    color: var(--cor-primaria);
+    font-size: 1rem;
+    margin-bottom: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nota-item-texto {
+    color: #bbb;
+    font-size: 0.85rem;
+    /* Limite de 5 linhas */
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+}   
+
+.btn-sub-tab {
+    background: #222;
+    border: 1px solid #444;
+    color: #888;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+.btn-sub-tab.active {
+    background: var(--cor-primaria);
+    color: white;
+    border-color: var(--cor-primaria);
+}
+
+ /* Estilos para as Sub-Abas de Leitura */
+        .container-filtros-leitura {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #111;
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid #222;
+        }
+        .btn-sub-tab {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-sub-tab.active {
+            background: var(--cor-primaria);
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
