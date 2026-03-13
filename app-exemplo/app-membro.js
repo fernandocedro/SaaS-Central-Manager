@@ -393,7 +393,7 @@ function renderizarLeituras() {
     leiturasCache.filter(item => (filtroLeituraAtual === 'lidas' ? lidasStorage.includes(item.id) : !lidasStorage.includes(item.id))).forEach(dados => {
         container.innerHTML += `
             <div class="card-leitura-diaria" style="background:#1a1a1a; padding:20px; border-radius:15px; margin-bottom:15px; border:1px solid #333;">
-                <h2 style="color:#fff; margin:0 0 10px 0;">${dados.referencia}</h2>
+                <h2 style="color:#fff; margin:0 0 10px 0;">${dados.referencia || dados.versos}</h2>
                 <div style="color:#bbb; margin-bottom:15px;">${(dados.texto || "").replace(/\n/g, '<br>')}</div>
                 <button onclick="window.toggleLido('${dados.id}')" style="width:100%; padding:12px; background:#222; color:white; border-radius:10px; border:1px solid #444; cursor:pointer;">
                     ${lidasStorage.includes(dados.id) ? 'Desmarcar' : 'Marcar como lido'}
