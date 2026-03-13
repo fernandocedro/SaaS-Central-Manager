@@ -21,7 +21,7 @@ const storage = getStorage(app);
 let idClienteDoc = null; 
 let todosOsVideos = []; 
 
-// --- FUNÇÃO DE APOIO: COMPRESSÃO E ESCAPE ---
+// --- FUNÇÕES DE APOIO ---
 async function otimizarImagem(arquivo) {
     if (!arquivo || !arquivo.type.startsWith('image/')) return arquivo;
     const opcoes = { maxSizeMB: 0.8, maxWidthOrHeight: 1024, useWebWorker: true };
@@ -73,7 +73,7 @@ window.mostrarSessao = (sessao) => {
     }
 };
 
-// --- 3. LÓGICA CONDICIONAL ---
+// --- 3. LÓGICA DE UI CONDICIONAL ---
 window.toggleInscricao = () => {
     const check = document.getElementById('checkInscricao');
     const bloco = document.getElementById('blocoInscricao');
@@ -132,15 +132,13 @@ function renderizarGradeVideos(lista) {
 document.getElementById('formConteudo')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnAcaoPrincipal');
-    const inputThumb = document.getElementById('videoThumb');
-    const thumbFile = inputThumb?.files?.[0];
+    const thumbFile = document.getElementById('videoThumb')?.files?.[0];
     
     if (btn) { btn.disabled = true; btn.innerText = "Processando..."; }
 
     try {
         let thumbUrl = "";
         if (thumbFile) {
-            btn.innerText = "Otimizando...";
             const arquivoOtimizado = await otimizarImagem(thumbFile);
             const storageRef = ref(storage, `clientes/${idClienteDoc}/conteudos/${Date.now()}_${thumbFile.name}`);
             const snapshot = await uploadBytes(storageRef, arquivoOtimizado);
@@ -157,7 +155,7 @@ document.getElementById('formConteudo')?.addEventListener('submit', async (e) =>
         alert("Vídeo publicado!");
         e.target.reset();
         window.mostrarSessao('list');
-    } catch (err) { console.error(err); alert("Erro ao publicar vídeo."); }
+    } catch (err) { alert("Erro ao publicar vídeo."); }
     finally { if (btn) { btn.disabled = false; btn.innerText = "Publicar Vídeo"; } }
 });
 
@@ -189,8 +187,7 @@ function carregarNoticias() {
 document.getElementById('formNoticia')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSalvarNoticia');
-    const inputImg = document.getElementById('noticiaImg');
-    const imgFile = inputImg?.files?.[0];
+    const imgFile = document.getElementById('noticiaImg')?.files?.[0];
     
     if (btn) { btn.disabled = true; btn.innerText = "Publicando..."; }
 
@@ -211,7 +208,7 @@ document.getElementById('formNoticia')?.addEventListener('submit', async (e) => 
         alert("Notícia publicada!");
         e.target.reset();
         carregarNoticias();
-    } catch (err) { console.error(err); alert("Erro ao publicar notícia."); }
+    } catch (err) { alert("Erro ao publicar notícia."); }
     finally { if (btn) { btn.disabled = false; btn.innerText = "Publicar Notícia"; } }
 });
 
@@ -219,8 +216,7 @@ document.getElementById('formNoticia')?.addEventListener('submit', async (e) => 
 document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSalvarEvento');
-    const inputImg = document.getElementById('eventoImg');
-    const imgFile = inputImg?.files?.[0];
+    const imgFile = document.getElementById('eventoImg')?.files?.[0];
     
     if (btn) { btn.disabled = true; btn.innerText = "Publicando..."; }
 
@@ -249,9 +245,9 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
 
         alert("Evento publicado!");
         e.target.reset();
-        if(document.getElementById('blocoInscricao')) document.getElementById('blocoInscricao').style.display = 'none';
+        document.getElementById('blocoInscricao').style.display = 'none';
         carregarEventos();
-    } catch (err) { console.error(err); alert("Erro ao publicar evento."); }
+    } catch (err) { alert("Erro ao publicar evento."); }
     finally { if (btn) { btn.disabled = false; btn.innerText = "Publicar Evento"; } }
 });
 
@@ -289,49 +285,27 @@ window.verInscritos = async (idEvento) => {
     const tbody = document.getElementById('listaInscritosBody');
     if (!tbody) return;
     tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Carregando...</td></tr>";
-    const modal = document.getElementById('modalInscritos');
-    if (modal) modal.style.display = 'flex';
+    document.getElementById('modalInscritos').style.display = 'flex';
 
     try {
         const q = query(collection(db, "clientes", idClienteDoc, "eventos", idEvento, "inscritos"), orderBy("dataInscricao", "desc"));
         const snap = await getDocs(q);
-        
-        tbody.innerHTML = "";
-        if (snap.empty) {
-            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Nenhum inscrito até o momento.</td></tr>";
-            return;
-        }
-
+        tbody.innerHTML = snap.empty ? "<tr><td colspan='4' style='text-align:center;'>Nenhum inscrito.</td></tr>" : "";
         snap.forEach(doc => {
             const d = doc.data();
-            const dataFormatada = d.dataInscricao ? d.dataInscricao.toDate().toLocaleDateString('pt-BR') : '---';
-            tbody.innerHTML += `
-                <tr>
-                    <td>${d.nome || '---'}</td>
-                    <td>${d.cpf || '---'}</td>
-                    <td>${d.igreja || '---'}</td>
-                    <td>${dataFormatada}</td>
-                </tr>`;
+            const dataFmt = d.dataInscricao?.toDate ? d.dataInscricao.toDate().toLocaleDateString('pt-BR') : '---';
+            tbody.innerHTML += `<tr><td>${d.nome || '---'}</td><td>${d.cpf || '---'}</td><td>${d.igreja || '---'}</td><td>${dataFmt}</td></tr>`;
         });
-    } catch (err) {
-        tbody.innerHTML = "<tr><td colspan='4' style='color: red; text-align:center;'>Erro ao buscar dados.</td></tr>";
-    }
-};
-
-window.fecharModalInscritos = () => { 
-    const modal = document.getElementById('modalInscritos');
-    if (modal) modal.style.display = 'none'; 
+    } catch (err) { tbody.innerHTML = "<tr><td colspan='4' style='color: red; text-align:center;'>Erro ao carregar.</td></tr>"; }
 };
 
 // --- 7. GESTÃO DE OFERTAS ---
 document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSalvarOferta');
-    const inputImg = document.getElementById('ofertaImg');
-    const imgFile = inputImg?.files?.[0];
+    const imgFile = document.getElementById('ofertaImg')?.files?.[0];
 
     if (btn) { btn.disabled = true; btn.innerText = "Salvando..."; }
-
     try {
         let imgUrl = "https://placehold.co/300x150/222/white?text=Oferta"; 
         if (imgFile) {
@@ -340,18 +314,16 @@ document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
             const snapshot = await uploadBytes(storageRef, arquivoOtimizado);
             imgUrl = await getDownloadURL(snapshot.ref);
         }
-
         await addDoc(collection(db, "clientes", idClienteDoc, "ofertas"), {
             titulo: document.getElementById('ofertaTitulo')?.value || "",
             link: document.getElementById('ofertaLink')?.value || "",
             capa: imgUrl,
             dataCriacao: serverTimestamp()
         });
-
         alert("Oferta cadastrada!");
         e.target.reset();
         carregarOfertas();
-    } catch (err) { alert("Erro ao cadastrar oferta."); } 
+    } catch (err) { alert("Erro ao cadastrar."); } 
     finally { if (btn) { btn.disabled = false; btn.innerText = "Cadastrar Opção de Oferta"; } }
 });
 
@@ -369,11 +341,9 @@ function carregarOfertas() {
                     <img src="${of.capa}" class="thumb-video">
                     <div class="info-video">
                         <h4>${of.titulo || ''}</h4>
-                        <p style="font-size: 12px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${of.link || ''}</p>
+                        <p style="font-size: 12px; color: #888;">${of.link || ''}</p>
                         <div class="acoes-video">
-                            <a href="${of.link}" target="_blank" class="btn-edit-sm" style="background: #eab308; text-decoration: none; display: flex; align-items: center; justify-content: center;" title="Testar Link Externo">
-                                <i class="fas fa-external-link-alt"></i>
-                            </a>
+                            <a href="${of.link}" target="_blank" class="btn-edit-sm" style="background: #eab308; display: flex; align-items: center; justify-content: center;"><i class="fas fa-external-link-alt"></i></a>
                             <button onclick="window.excluirOferta('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
@@ -382,64 +352,36 @@ function carregarOfertas() {
     });
 }
 
-window.excluirOferta = async (id) => {
-    if (confirm("Deseja remover esta opção de oferta?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "ofertas", id));
-};
-
-// --- 8. GESTÃO DE USUÁRIOS DO APP (MELHORADO) ---
+// --- 8. GESTÃO DE USUÁRIOS DO APP ---
 function carregarUsuariosApp() {
     if (!idClienteDoc) return;
-    // Corrigido para carregar todos os membros vinculados ao cliente
     const q = query(collection(db, "usuarios_app"), where("clienteId", "==", idClienteDoc));
     onSnapshot(q, (snapshot) => {
         const tbody = document.getElementById('tabelaUsuariosBody');
         if (!tbody) return;
-        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center; padding: 20px; color: #888;'>Nenhum membro encontrado.</td></tr>" : "";
-
+        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center; padding: 20px;'>Nenhum membro.</td></tr>" : "";
         snapshot.forEach((docSnap) => {
             const user = docSnap.data();
-            // Fallback para usuários do Google que podem não ter dataCadastro gravada da mesma forma
-            let dataFmt = 'Google/Rede Social';
-            if (user.dataCadastro?.toDate) {
-                dataFmt = user.dataCadastro.toDate().toLocaleDateString('pt-BR');
-            } else if (user.dataCadastro) {
-                dataFmt = new Date(user.dataCadastro).toLocaleDateString('pt-BR');
-            }
+            let dataFmt = 'Rede Social';
+            if (user.dataCadastro?.toDate) dataFmt = user.dataCadastro.toDate().toLocaleDateString('pt-BR');
+            else if (user.dataCadastro) dataFmt = new Date(user.dataCadastro).toLocaleDateString('pt-BR');
             
             tbody.innerHTML += `
                 <tr>
                     <td>${user.nome || 'Usuário'}</td>
                     <td>${user.email || 'S/ Email'}</td>
                     <td>${dataFmt}</td>
-                    <td>
-                        <button onclick="window.abrirModalGerenciarUsuario('${docSnap.id}', '${esc(user.nome)}', '${user.email}')" class="btn-edit-sm">
-                            <i class="fas fa-user-shield"></i> Gerenciar
-                        </button>
-                    </td>
+                    <td><button onclick="window.abrirModalGerenciarUsuario('${docSnap.id}', '${esc(user.nome)}', '${user.email}')" class="btn-edit-sm"><i class="fas fa-user-shield"></i> Gerenciar</button></td>
                 </tr>`;
         });
     });
 }
 
 window.abrirModalGerenciarUsuario = (id, nome, email) => {
-    if (document.getElementById('editUserId')) document.getElementById('editUserId').value = id;
-    if (document.getElementById('editUserNome')) document.getElementById('editUserNome').innerText = nome;
-    if (document.getElementById('editUserEmail')) document.getElementById('editUserEmail').innerText = email;
-    if (document.getElementById('modalGerenciarUsuario')) document.getElementById('modalGerenciarUsuario').style.display = 'flex';
-};
-
-window.fecharModalGerenciarUsuario = () => {
-    const modal = document.getElementById('modalGerenciarUsuario');
-    if (modal) modal.style.display = 'none';
-};
-
-window.resetarSenhaUsuario = async () => {
-    const email = document.getElementById('editUserEmail')?.innerText;
-    if (!email) return;
-    try {
-        await sendPasswordResetEmail(auth, email);
-        alert("E-mail de redefinição de senha enviado!");
-    } catch (err) { alert("Erro: " + err.message); }
+    document.getElementById('editUserId').value = id;
+    document.getElementById('editUserNome').innerText = nome;
+    document.getElementById('editUserEmail').innerText = email;
+    document.getElementById('modalGerenciarUsuario').style.display = 'flex';
 };
 
 window.excluirUsuarioApp = async () => {
@@ -447,7 +389,7 @@ window.excluirUsuarioApp = async () => {
     if (id && confirm("Deseja remover o acesso deste membro?")) {
         await deleteDoc(doc(db, "usuarios_app", id));
         alert("Membro removido.");
-        window.fecharModalGerenciarUsuario();
+        document.getElementById('modalGerenciarUsuario').style.display = 'none';
     }
 };
 
@@ -495,35 +437,28 @@ function carregarLeituras() {
     });
 }
 
-window.excluirLeitura = async (id) => { if (confirm("Excluir leitura?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "leituras", id)); };
-
 // --- 10. GESTÃO DE ORAÇÕES ---
 function carregarOracoes() {
     if (!idClienteDoc) return;
     const tbody = document.getElementById('tabelaOracoesBody');
-    if (!tbody) return;
     const q = query(collection(db, "clientes", idClienteDoc, "pedidos_oracao"), orderBy("dataCriacao", "desc"));
     onSnapshot(q, (snapshot) => {
-        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center;'>Nenhum pedido recebido.</td></tr>" : "";
+        if (!tbody) return;
+        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center;'>Nenhum pedido.</td></tr>" : "";
         snapshot.forEach((docSnap) => {
             const ora = docSnap.data();
-            let dataFmt = '---';
-            if (ora.dataCriacao) {
-                const d = ora.dataCriacao.toDate ? ora.dataCriacao.toDate() : new Date(ora.dataCriacao);
-                dataFmt = d.toLocaleDateString('pt-BR') + " " + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            }
+            const d = ora.dataCriacao?.toDate ? ora.dataCriacao.toDate() : new Date();
+            const dataFmt = d.toLocaleDateString('pt-BR') + " " + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             tbody.innerHTML += `
                 <tr>
                     <td style="font-size: 0.85rem; color: #888;">${dataFmt}</td>
                     <td><strong>${ora.nome || 'Anônimo'}</strong></td>
-                    <td style="max-width: 350px; white-space: normal; line-height: 1.4;">${ora.pedido || 'Sem texto'}</td>
+                    <td style="max-width: 350px; white-space: normal;">${ora.pedido || 'Sem texto'}</td>
                     <td><button onclick="window.excluirOracao('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button></td>
                 </tr>`;
         });
     });
 }
-
-window.excluirOracao = async (id) => { if (confirm("Excluir permanentemente?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id)); };
 
 // --- 11. NOTIFICAÇÕES PUSH ---
 document.getElementById('formPush')?.addEventListener('submit', async (e) => {
@@ -571,25 +506,32 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// EXCLUSÕES GLOBAIS
+// --- FUNÇÕES GLOBAIS DE JANELA ---
+window.fecharModalInscritos = () => { document.getElementById('modalInscritos').style.display = 'none'; };
+window.fecharModalGerenciarUsuario = () => { document.getElementById('modalGerenciarUsuario').style.display = 'none'; };
+window.fecharModalEdicao = () => { document.getElementById('modalEditarVideo').style.display = 'none'; };
+window.fecharModalSenha = () => { document.getElementById('modalSenhaCliente').style.display = 'none'; };
+window.abrirModalSenha = () => { document.getElementById('modalSenhaCliente').style.display = 'flex'; };
+
 window.excluirVideo = async (id) => { if (confirm("Excluir vídeo?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "conteudos", id)); };
 window.excluirNoticia = async (id) => { if (confirm("Excluir notícia?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "noticias", id)); };
 window.excluirEvento = async (id) => { if (confirm("Excluir evento?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "eventos", id)); };
+window.excluirOferta = async (id) => { if (confirm("Excluir oferta?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "ofertas", id)); };
+window.excluirLeitura = async (id) => { if (confirm("Excluir leitura?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "leituras", id)); };
+window.excluirOracao = async (id) => { if (confirm("Excluir oração?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id)); };
 
-// EDIÇÃO E MODAIS
+window.logoutCliente = () => { if(confirm("Sair?")) signOut(auth).then(() => window.location.href = "login-cliente.html"); };
+
 window.prepararEdicaoVideo = (id, serie, desc) => {
-    if (document.getElementById('editVideoId')) document.getElementById('editVideoId').value = id;
-    if (document.getElementById('editVideoSerie')) document.getElementById('editVideoSerie').value = serie;
-    if (document.getElementById('editVideoDesc')) document.getElementById('editVideoDesc').value = desc;
-    if (document.getElementById('modalEditarVideo')) document.getElementById('modalEditarVideo').style.display = 'flex';
+    document.getElementById('editVideoId').value = id;
+    document.getElementById('editVideoSerie').value = serie;
+    document.getElementById('editVideoDesc').value = desc;
+    document.getElementById('modalEditarVideo').style.display = 'flex';
 };
-
-window.fecharModalEdicao = () => { if(document.getElementById('modalEditarVideo')) document.getElementById('modalEditarVideo').style.display = 'none'; };
 
 document.getElementById('formEditarVideo')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('editVideoId')?.value;
-    if (!id) return;
     try {
         await updateDoc(doc(db, "clientes", idClienteDoc, "conteudos", id), {
             serie: document.getElementById('editVideoSerie')?.value || "",
@@ -599,6 +541,11 @@ document.getElementById('formEditarVideo')?.addEventListener('submit', async (e)
     } catch(err) { alert("Erro ao editar."); }
 });
 
-window.abrirModalSenha = () => { if(document.getElementById('modalSenhaCliente')) document.getElementById('modalSenhaCliente').style.display = 'flex'; };
-window.fecharModalSenha = () => { if(document.getElementById('modalSenhaCliente')) document.getElementById('modalSenhaCliente').style.display = 'none'; };
-window.logoutCliente = () => { if(confirm("Sair?")) signOut(auth).then(() => window.location.href = "login-cliente.html"); };
+window.resetarSenhaUsuario = async () => {
+    const email = document.getElementById('editUserEmail')?.innerText;
+    if (!email) return;
+    try {
+        await sendPasswordResetEmail(auth, email);
+        alert("E-mail de redefinição enviado!");
+    } catch (err) { alert("Erro ao enviar e-mail."); }
+};
