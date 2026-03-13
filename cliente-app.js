@@ -21,12 +21,12 @@ const storage = getStorage(app);
 let idClienteDoc = null; 
 let todosOsVideos = []; 
 
-// --- 2. NAVEGAÇÃO ENTRE ABAS (ATUALIZADA) ---
+// --- 2. NAVEGAÇÃO ENTRE ABAS ---
 window.mostrarSessao = (sessao) => {
     const secoesIds = [
         'secaoAdicionar', 'secaoGerenciar', 'secaoNoticias', 
         'secaoEventos', 'secaoOfertas', 'secaoUsuarios', 
-        'secaoLeitura', 'secaoNotificacoes', 'secaoOracoes' // Adicionado aqui
+        'secaoLeitura', 'secaoNotificacoes', 'secaoOracoes'
     ];
     
     secoesIds.forEach(id => {
@@ -66,7 +66,7 @@ window.mostrarSessao = (sessao) => {
     } else if (sessao === 'notificacoes') {
         document.getElementById('secaoNotificacoes').style.display = 'block';
         document.getElementById('menuPush').classList.add('active');
-    } else if (sessao === 'oracoes') { // Nova aba de orações
+    } else if (sessao === 'oracoes') { 
         document.getElementById('secaoOracoes').style.display = 'block';
         document.getElementById('menuPrayers').classList.add('active');
         carregarOracoes();
@@ -478,33 +478,40 @@ function carregarLeituras() {
 
 window.excluirLeitura = async (id) => { if (confirm("Excluir leitura?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "leituras", id)); };
 
-// --- GESTÃO DE ORAÇÕES (NOVA SEÇÃO) ---
+// --- GESTÃO DE ORAÇÕES (SINCRONIZADA COM APP) ---
 function carregarOracoes() {
     if (!idClienteDoc) return;
     const tbody = document.getElementById('tabelaOracoesBody');
     if (!tbody) return;
 
-    // Buscando pedidos de oração do subcoleção do cliente
-    const q = query(collection(db, "clientes", idClienteDoc, "oracoes"), orderBy("dataPedido", "desc"));
+    // ATENÇÃO: Mudança para 'pedidos_oracao' para bater com o App
+    const q = query(collection(db, "clientes", idClienteDoc, "pedidos_oracao"), orderBy("dataCriacao", "desc"));
     
     onSnapshot(q, (snapshot) => {
         tbody.innerHTML = "";
         if (snapshot.empty) {
-            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Nenhum pedido de oração encontrado.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 20px; color: #888;'>Nenhum pedido de oração enviado pelo App ainda.</td></tr>";
             return;
         }
 
         snapshot.forEach((docSnap) => {
             const ora = docSnap.data();
-            const dataFmt = ora.dataPedido ? ora.dataPedido.toDate().toLocaleDateString('pt-BR') : '---';
+            
+            // Tratamento da data vinda do App (dataCriacao)
+            let dataFmt = '---';
+            if (ora.dataCriacao) {
+                // Verifica se é Timestamp do Firebase ou Objeto Date
+                const d = ora.dataCriacao.toDate ? ora.dataCriacao.toDate() : new Date(ora.dataCriacao);
+                dataFmt = d.toLocaleDateString('pt-BR') + " " + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            }
             
             tbody.innerHTML += `
                 <tr>
-                    <td>${dataFmt}</td>
-                    <td>${ora.nome || 'Anônimo'}</td>
-                    <td style="max-width: 300px; white-space: normal;">${ora.pedido}</td>
+                    <td style="font-size: 0.85rem; color: #888;">${dataFmt}</td>
+                    <td><strong>${ora.nome || 'Anônimo'}</strong></td>
+                    <td style="max-width: 350px; white-space: normal; line-height: 1.4;">${ora.pedido || 'Sem texto'}</td>
                     <td>
-                        <button onclick="window.excluirOracao('${docSnap.id}')" class="btn-delete-sm">
+                        <button onclick="window.excluirOracao('${docSnap.id}')" class="btn-delete-sm" title="Excluir">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -514,8 +521,8 @@ function carregarOracoes() {
 }
 
 window.excluirOracao = async (id) => {
-    if (confirm("Excluir pedido de oração?")) {
-        await deleteDoc(doc(db, "clientes", idClienteDoc, "oracoes", id));
+    if (confirm("Excluir pedido de oração permanentemente?")) {
+        await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id));
     }
 };
 
