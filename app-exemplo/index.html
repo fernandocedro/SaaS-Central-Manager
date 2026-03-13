@@ -171,70 +171,71 @@
 
         <section id="sessaoDepartamentos" style="display: none; padding: 15px;"><h3 class="titulo-bronze">Departamentos</h3></section>
        <section id="sessaoPerfil" style="display: none; padding: 15px;">
-            <h3 class="titulo-bronze">Meu Perfil</h3>
-            <div class="perfil-container-premium">
-                <div class="grupo-input">
-                    <label>Nome Completo</label>
-                    <input type="text" id="perfilNome" placeholder="Seu nome completo">
-                </div>
-                <div class="grupo-input">
-                    <label>E-mail</label>
-                    <input type="email" id="perfilEmail" placeholder="seu@email.com">
-                </div>
-                <div class="grupo-input">
-                    <label>Telefone (WhatsApp)</label>
-                    <input type="tel" id="perfilTel" placeholder="(00) 00000-0000">
-                </div>
-                
-                <div class="grid-perfil">
-                    <div class="grupo-input">
-                        <label>Data de Nascimento</label>
-                        <input type="date" id="perfilNascimento">
-                    </div>
-                    <div class="grupo-input">
-                        <label>Status</label>
-                        <select id="perfilStatus">
-                            <option value="Visitante">Visitante</option>
-                            <option value="Membro">Membro</option>
-                            <option value="Diacono">Diácono</option>
-                            <option value="Presbitero">Presbítero</option>
-                            <option value="Pastor">Pastor</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid-perfil">
-                    <div class="grupo-input">
-                        <label>Data de Conversão</label>
-                        <input type="date" id="perfilConversao">
-                    </div>
-                    <div class="grupo-input">
-                        <label>Data de Batismo</label>
-                        <input type="date" id="perfilBatismo">
-                    </div>
-                </div>
-
-                <div class="grupo-input">
-                    <label>Casado(a)?</label>
-                    <select id="perfilCasado" onchange="window.toggleDataCasamento()">
-                        <option value="nao">Não</option>
-                        <option value="sim">Sim</option>
-                    </select>
-                </div>
-
-                <div class="grupo-input" id="divDataCasamento" style="display: none;">
-                    <label>Data de Casamento</label>
-                    <input type="date" id="perfilDataCasamento">
-                </div>
-
-                <button onclick="window.salvarPerfil()" class="btn-acao" style="margin-top: 10px; width: 100%;">
-                    <i class="fas fa-save"></i> Salvar Alterações
-                </button>
-                <button onclick="window.excluirConta()" class="btn-excluir-conta">
-                    <i class="fas fa-user-slash"></i> Excluir Minha Conta
-                </button>
+    <h3 class="titulo-bronze">Meu Perfil</h3>
+    <div class="perfil-container-premium">
+        <div class="grupo-input">
+            <label>Nome Completo</label>
+            <input type="text" id="perfilNome" placeholder="Seu nome completo">
+        </div>
+        <div class="grupo-input">
+            <label>E-mail</label>
+            <input type="email" id="perfilEmail" placeholder="seu@email.com">
+        </div>
+        <div class="grupo-input">
+            <label>Telefone (WhatsApp)</label>
+            <input type="tel" id="perfilTel" placeholder="(00) 00000-0000">
+        </div>
+        
+        <div class="grid-perfil">
+            <div class="grupo-input">
+                <label>Data de Nascimento</label>
+                <input type="date" id="perfilNascimento">
             </div>
-        </section>
+            <div class="grupo-input">
+                <label>Status</label>
+                <select id="perfilStatus">
+                    <option value="Visitante">Visitante</option>
+                    <option value="Membro">Membro</option>
+                    <option value="Diacono">Diácono</option>
+                    <option value="Presbitero">Presbítero</option>
+                    <option value="Pastor">Pastor</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-perfil">
+            <div class="grupo-input">
+                <label>Data de Conversão</label>
+                <input type="date" id="perfilConversao">
+            </div>
+            <div class="grupo-input">
+                <label>Data de Batismo</label>
+                <input type="date" id="perfilBatismo">
+            </div>
+        </div>
+
+        <div class="grupo-input">
+            <label>Casado(a)?</label>
+            <select id="perfilCasado" onchange="window.toggleDataCasamento()">
+                <option value="nao">Não</option>
+                <option value="sim">Sim</option>
+            </select>
+        </div>
+
+        <div class="grupo-input" id="divDataCasamento" style="display: none;">
+            <label>Data de Casamento</label>
+            <input type="date" id="perfilDataCasamento">
+        </div>
+
+        <button onclick="window.salvarPerfil()" class="btn-acao-perfil">
+            <i class="fas fa-save"></i> Salvar Alterações
+        </button>
+        
+        <button onclick="window.excluirConta()" class="btn-excluir-conta">
+            <i class="fas fa-user-slash"></i> Excluir Minha Conta
+        </button>
+    </div>
+</section>
         <section id="sessaoVideos" style="display: none; padding: 15px;"><h3 class="titulo-bronze">Vídeos</h3><div id="gradeVideosCompleta"></div></section>
         <section id="sessaoOfertas" style="display: none; padding: 15px;"><h3 class="titulo-bronze">Ofertas e Dízimos</h3><div id="listaOfertasContainer"></div></section>
 
@@ -357,6 +358,7 @@
     </script>
 </body>
 </html>
+
 
 
 
