@@ -343,23 +343,27 @@ window.decidirMembroDept = async (deptId, membroDocId, decisao) => {
 
 // --- 5. GESTÃO DE FORMULÁRIOS (CREATE/UPDATE) ---
 
-// --- ADICIONADO: FUNÇÃO SALVAR LEITURA ---
+// --- CORREÇÃO: FUNÇÃO SALVAR LEITURA EXPOSTA CORRETAMENTE ---
 window.salvarLeitura = async () => {
-    if (!idClienteDoc) return;
-    const data = document.getElementById('leituraData').value;
-    const versos = document.getElementById('leituraVersos').value;
-    const texto = document.getElementById('leituraTexto').value;
+    if (!idClienteDoc) {
+        alert("Erro: ID do cliente não carregado.");
+        return;
+    }
+    
+    const dataInput = document.getElementById('leituraData');
+    const versosInput = document.getElementById('leituraVersos');
+    const textoInput = document.getElementById('leituraTexto');
 
-    if (!data || !versos) {
+    if (!dataInput.value || !versosInput.value) {
         alert("Preencha a data e os versículos.");
         return;
     }
 
     try {
         await addDoc(collection(db, "clientes", idClienteDoc, "leituras"), {
-            dataLeitura: data,
-            versos: versos,
-            texto: texto,
+            dataLeitura: dataInput.value,
+            versos: versosInput.value,
+            texto: textoInput.value,
             dataCriacao: serverTimestamp()
         });
         alert("Leitura cadastrada!");
