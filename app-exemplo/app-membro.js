@@ -212,11 +212,16 @@ window.mostrarSessao = (aba) => {
         escutarMeusPedidosOracao();
     } else if (aba === 'agenda') {
         carregarAgenda();
-    } else if (aba === 'ofertas') {
-        carregarOfertas();
     } else if (aba === 'departamentos') {
         carregarDepartamentos();
     }
+    // Removido a chamada automática de carregarOfertas() para evitar erro se a função não existir
+};
+
+// --- FUNÇÃO DE OFERTAS (ADICIONADA PARA EVITAR ERRO) ---
+window.carregarOfertas = () => {
+    console.log("Sessão de ofertas carregada.");
+    // Aqui as ofertas aparecem via HTML estático como estava antes
 };
 
 // --- DEPARTAMENTOS ---
@@ -348,7 +353,7 @@ window.confirmarInscricao = async () => {
         });
         alert("Inscrição realizada!");
         window.fecharInscricao();
-    } catch (e) { alert("Erro na inscrição."); }
+    } catch (e) { alert("Erro na inscription."); }
 };
 
 // --- LEITURA DIÁRIA ---
@@ -567,7 +572,7 @@ window.fecharReflexao = () => { document.getElementById('modalReflexao').style.d
 window.enviarPedidoOracao = async () => {
     const nome = document.getElementById('oracaoNome').value;
     const texto = document.getElementById('oracaoTexto').value;
-    const msgSucesso = document.getElementById('statusOracao'); // Elemento para mostrar o texto
+    const msgSucesso = document.getElementById('statusOracao'); 
 
     if (!nome || !texto) return alert("Preencha tudo.");
     
@@ -576,16 +581,12 @@ window.enviarPedidoOracao = async () => {
             nome, pedido: texto, userId: auth.currentUser.uid, status: "pendente", idCliente, dataCriacao: new Date()
         });
         
-        // Limpa os campos após o envio
         document.getElementById('oracaoTexto').value = "";
         
-        // Mostra a mensagem de sucesso
         if(msgSucesso) {
             msgSucesso.innerText = "Sua oração foi enviada!";
             msgSucesso.style.display = "block";
             msgSucesso.style.color = "var(--cor-primaria)";
-            
-            // Esconde a mensagem após 5 segundos
             setTimeout(() => { msgSucesso.style.display = "none"; }, 5000);
         }
     } catch (e) { 
