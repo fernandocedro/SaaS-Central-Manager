@@ -328,4 +328,88 @@ html, body {
 
 .tabela-adm tr:hover {
     background: rgba(255,255,255,0.05);
+
+}
+
+/* --- ESTILIZAÇÃO PARA DEPARTAMENTOS --- */
+
+/* Grid que organiza os cards dos departamentos */
+#gradeDepartamentos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* Card individual do departamento */
+.card-dept {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+}
+
+.card-dept:hover {
+    transform: translateY(-5px);
+    border-color: var(--cor-primaria);
+}
+
+.card-dept h4 {
+    color: #fff;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    text-transform: capitalize;
+}
+
+.card-dept p {
+    color: #888;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+/* Ajuste para alinhar os botões de ação no card */
+.acoes-dept {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #2a2a2a;
+    padding-top: 15px;
+}
+
+/* Botão de exclusão específico para o card */
+.btn-delete-dept {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: 0.3s;
+}
+
+.btn-delete-dept:hover {
+    background: #ef4444;
+    color: #fff;
+}
+
+/* Estilo para o formulário dentro da seção */
+#formDepartamento {
+    background: #111;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border-left: 4px solid var(--cor-primaria);
+}
+
+/* Responsividade para telas menores */
+@media (max-width: 768px) {
+    #gradeDepartamentos {
+        grid-template-columns: 1fr;
+    }
 }
