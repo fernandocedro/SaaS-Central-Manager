@@ -80,12 +80,11 @@ window.mudarModoAuth = (modo) => {
 window.loginGoogle = async () => {
     try { 
         const result = await signInWithPopup(auth, googleProvider);
-        // SALVA O IDCLIENTE AUTOMATICAMENTE NO LOGIN GOOGLE
         await setDoc(doc(db, "usuarios_app", result.user.uid), {
             nome: result.user.displayName,
             email: result.user.email,
             fotoUrl: result.user.photoURL,
-            idCliente: idCliente, // Aqui o vínculo é feito
+            idCliente: idCliente,
             ultimaAtividade: new Date()
         }, { merge: true });
     } catch (error) { 
@@ -106,11 +105,10 @@ document.getElementById('formAuth')?.addEventListener('submit', async (e) => {
             await signInWithEmailAndPassword(auth, email, senha);
         } else if (btnTexto === "Cadastrar agora") {
             const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-            // SALVA O IDCLIENTE NO CADASTRO POR E-MAIL TAMBÉM
             await setDoc(doc(db, "usuarios_app", userCredential.user.uid), {
                 nome: nome, 
                 email: email, 
-                idCliente: idCliente, // Vínculo garantido no cadastro manual
+                idCliente: idCliente,
                 dataCriacao: new Date()
             });
         } else if (btnTexto === "Enviar Link") {
@@ -153,15 +151,26 @@ async function inicializarApp() {
                 const userData = userDoc.data();
                 const nomeFinal = userData.nome || user.displayName || "Membro";
                 if(nomeDisplay) nomeDisplay.innerText = nomeFinal;
-                if(document.getElementById('ins_nome')) document.getElementById('ins_nome').value = userData.nome || "";
+                
+                // PREENCHE CAMPOS DO PERFIL SE EXISTIREM
+                if(document.getElementById('perfilNome')) document.getElementById('perfilNome').value = userData.nome || "";
+                if(document.getElementById('perfilEmail')) document.getElementById('perfilEmail').value = userData.email || user.email || "";
+                if(document.getElementById('perfilTel')) document.getElementById('perfilTel').value = userData.whatsapp || "";
+                if(document.getElementById('perfilNascimento')) document.getElementById('perfilNascimento').value = userData.nascimento || "";
+                if(document.getElementById('perfilStatus')) document.getElementById('perfilStatus').value = userData.status || "Visitante";
+                if(document.getElementById('perfilConversao')) document.getElementById('perfilConversao').value = userData.conversao || "";
+                if(document.getElementById('perfilBatismo')) document.getElementById('perfilBatismo').value = userData.batismo || "";
+                if(document.getElementById('perfilCasado')) {
+                    document.getElementById('perfilCasado').value = userData.casado || "nao";
+                    window.toggleDataCasamento();
+                }
+                if(document.getElementById('perfilDataCasamento')) document.getElementById('perfilDataCasamento').value = userData.dataCasamento || "";
+
                 if(userData.fotoUrl || user.photoURL) {
                     const urlFinal = userData.fotoUrl || user.photoURL;
                     if(fotoDisplay) fotoDisplay.src = urlFinal;
                     if(fotoMenu) fotoMenu.src = urlFinal;
                 }
-            } else {
-                if(nomeDisplay) nomeDisplay.innerText = user.displayName || "Membro";
-                if(user.photoURL && fotoDisplay) fotoDisplay.src = user.photoURL;
             }
             window.mostrarSessao('home');
         } else {
@@ -213,18 +222,14 @@ async function carregarOfertas() {
     if (!idCliente) return;
     const container = document.getElementById('listaOfertasContainer');
     if (!container) return;
-
     container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando opções...</p>`;
-
     try {
         const colRef = collection(db, "clientes", idCliente, "ofertas");
         const snap = await getDocs(colRef);
-        
         if (snap.empty) {
             container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhuma informação de dízimo disponível.</p>`;
             return;
         }
-
         container.innerHTML = "";
         snap.forEach((doc) => {
             const of = doc.data();
@@ -238,9 +243,7 @@ async function carregarOfertas() {
                     </a>
                 </div>`;
         });
-    } catch (e) {
-        container.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar ofertas.</p>`;
-    }
+    } catch (e) { container.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar ofertas.</p>`; }
 }
 
 // --- AGENDA DE EVENTOS ---
@@ -284,7 +287,6 @@ async function carregarAgenda() {
     } catch (e) { container.innerHTML = `<p style="color:red; text-align:center;">Erro na agenda.</p>`; }
 }
 
-// Funções de Modal de Inscrição
 window.abrirInscricao = (id, titulo, data, hora) => {
     const modal = document.getElementById('modalInscricao');
     if (!modal) return;
@@ -312,7 +314,7 @@ window.confirmarInscricao = async () => {
         });
         alert("Inscrição realizada!");
         window.fecharInscricao();
-    } catch (e) { alert("Erro na inscription."); }
+    } catch (e) { alert("Erro na inscrição."); }
 };
 
 // --- LEITURA DIÁRIA ---
@@ -333,10 +335,8 @@ async function carregarLeituraDiaria() {
 
 window.filtrarLeitura = (filtro) => {
     filtroLeituraAtual = filtro; 
-    
     const btnPendentes = document.getElementById('tabPendentes');
     const btnLidas = document.getElementById('tabLidas');
-    
     if (btnPendentes && btnLidas) {
         if (filtro === 'pendentes') {
             btnPendentes.classList.add('active');
@@ -346,20 +346,14 @@ window.filtrarLeitura = (filtro) => {
             btnPendentes.classList.remove('active');
         }
     }
-    
     renderizarLeituras();
 };
 
 window.toggleLido = (id) => {
     const chaveLidos = `leituras_lidas_${idCliente}`;
     let lidas = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
-    
-    if (lidas.includes(id)) {
-        lidas = lidas.filter(i => i !== id);
-    } else {
-        lidas.push(id);
-    }
-    
+    if (lidas.includes(id)) { lidas = lidas.filter(i => i !== id); } 
+    else { lidas.push(id); }
     localStorage.setItem(chaveLidos, JSON.stringify(lidas));
     renderizarLeituras(); 
 };
@@ -370,17 +364,14 @@ function renderizarLeituras() {
     const chaveLidos = `leituras_lidas_${idCliente}`;
     const lidasStorage = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
     container.innerHTML = "";
-    
     const filtradas = leiturasCache.filter(item => {
         const estaLida = lidasStorage.includes(item.id);
         return filtroLeituraAtual === 'lidas' ? estaLida : !estaLida;
     });
-
     if (filtradas.length === 0) {
         container.innerHTML = `<p style="color:#666; text-align:center; padding:20px;">Nenhuma leitura encontrada nesta aba.</p>`;
         return;
     }
-
     filtradas.forEach((dados) => {
         const estaLida = lidasStorage.includes(dados.id);
         container.innerHTML += `
@@ -504,9 +495,7 @@ window.selecionarCapitulo = (livro) => {
     livroSelecionado = livro;
     const container = document.getElementById('containerSelecao');
     container.innerHTML = `<div style="grid-column:1/-1; color:var(--cor-primaria)">${livro}: Escolha o Capítulo</div>`;
-    for(let i = 1; i <= 50; i++) {
-        container.innerHTML += `<button onclick="window.finalizarSelecao('${livro}', ${i})">${i}</button>`;
-    }
+    for(let i = 1; i <= 50; i++) { container.innerHTML += `<button onclick="window.finalizarSelecao('${livro}', ${i})">${i}</button>`; }
 };
 
 window.finalizarSelecao = (livro, cap) => {
@@ -523,9 +512,7 @@ window.buscarBiblia = async (tipo, valorManual = null) => {
     try {
         const response = await fetch(`https://bible-api.com/${encodeURIComponent(busca)}?translation=almeida`);
         const data = await response.json();
-        if (data.verses) {
-            resContainer.innerHTML = data.verses.map(v => `<p><strong>${v.verse}</strong> ${v.text}</p>`).join('');
-        }
+        if (data.verses) { resContainer.innerHTML = data.verses.map(v => `<p><strong>${v.verse}</strong> ${v.text}</p>`).join(''); }
     } catch (e) { resContainer.innerHTML = "Erro ao buscar."; }
 };
 
@@ -585,22 +572,17 @@ function escutarMeusPedidosOracao() {
     });
 }
 
-// Garante que o campo de casamento apareça/suma corretamente
+// --- PERFIL ---
 window.toggleDataCasamento = () => {
     const status = document.getElementById('perfilCasado').value;
     const divCasamento = document.getElementById('divDataCasamento');
-    divCasamento.style.display = (status === 'sim') ? 'block' : 'none';
+    if(divCasamento) divCasamento.style.display = (status === 'sim') ? 'block' : 'none';
 };
 
-// Função para Salvar os Dados do Perfil
 window.salvarPerfil = async () => {
     const user = auth.currentUser;
-    if (!user) {
-        alert("Você precisa estar logado para salvar.");
-        return;
-    }
+    if (!user) return alert("Você precisa estar logado para salvar.");
 
-    // Coleta os valores dos campos do HTML
     const dados = {
         nome: document.getElementById('perfilNome').value,
         email: document.getElementById('perfilEmail').value,
@@ -611,45 +593,33 @@ window.salvarPerfil = async () => {
         batismo: document.getElementById('perfilBatismo').value,
         casado: document.getElementById('perfilCasado').value,
         dataCasamento: document.getElementById('perfilDataCasamento').value,
-        ultimaAtualizacao: new Date().toISOString()
+        idCliente: idCliente,
+        ultimaAtualizacao: new Date()
     };
 
     try {
-        // Salva no Firestore (Coleção 'usuarios' ou 'membros')
-        // Ajuste 'usuarios' para o nome da sua coleção se for diferente
-        await setDoc(doc(db, "usuarios", user.uid), dados, { merge: true });
-        
+        await setDoc(doc(db, "usuarios_app", user.uid), dados, { merge: true });
         alert("Perfil atualizado com sucesso!");
-        
-        // Opcional: Atualiza o nome na tela principal
-        if(document.getElementById('nomeMembro')) {
-            document.getElementById('nomeMembro').innerText = dados.nome;
-        }
-
+        if(document.getElementById('nomeMembro')) document.getElementById('nomeMembro').innerText = dados.nome;
     } catch (error) {
         console.error("Erro ao salvar perfil:", error);
-        alert("Erro ao salvar informações. Tente novamente.");
+        alert("Erro ao salvar informações.");
     }
 };
 
-// Função para Excluir Conta
 window.excluirConta = async () => {
     if (confirm("Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.")) {
         const user = auth.currentUser;
         try {
-            await deleteDoc(doc(db, "usuarios", user.uid)); // Remove dados
-            await user.delete(); // Remove login
+            await deleteDoc(doc(db, "usuarios_app", user.uid));
+            await user.delete();
             alert("Conta excluída com sucesso.");
             window.location.reload();
         } catch (error) {
-            console.error("Erro ao excluir:", error);
-            alert("Para excluir sua conta, você precisa ter feito login recentemente. Saia e entre novamente para realizar esta ação.");
+            alert("Para excluir sua conta, saia e entre novamente para realizar esta ação.");
         }
     }
 };
 
 window.logoutCliente = () => { signOut(auth).then(() => { location.reload(); }); };
 window.addEventListener('DOMContentLoaded', inicializarApp);
-
-
-
