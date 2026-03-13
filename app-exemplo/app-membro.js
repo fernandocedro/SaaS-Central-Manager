@@ -214,8 +214,42 @@ window.mostrarSessao = (aba) => {
         carregarAgenda();
     } else if (aba === 'ofertas') {
         carregarOfertas();
+    } else if (aba === 'departamentos') {
+        carregarDepartamentos();
     }
 };
+
+// --- DEPARTAMENTOS ---
+async function carregarDepartamentos() {
+    if (!idCliente) return;
+    const container = document.getElementById('listaDepartamentosContainer');
+    if (!container) return;
+    container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando departamentos...</p>`;
+    try {
+        const colRef = collection(db, "clientes", idCliente, "departamentos");
+        const snap = await getDocs(colRef);
+        if (snap.empty) {
+            container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhum departamento cadastrado.</p>`;
+            return;
+        }
+        container.innerHTML = "";
+        snap.forEach((doc) => {
+            const dep = doc.data();
+            container.innerHTML += `
+                <div class="card-departamento" style="background:#1a1a1a; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #333; display:flex; align-items:center; gap:15px;">
+                    ${dep.imagem ? `<img src="${dep.imagem}" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">` : `<div style="width:60px; height:60px; border-radius:50%; background:#333; display:flex; align-items:center; justify-content:center;"><i class="fas fa-users" style="color:#666;"></i></div>`}
+                    <div style="flex:1;">
+                        <h4 style="color:#fff; margin:0 0 5px 0;">${dep.nome || 'Departamento'}</h4>
+                        <p style="color:#aaa; font-size:0.85rem; margin:0;">${dep.descricao || ''}</p>
+                        ${dep.lider ? `<p style="color:var(--cor-primaria); font-size:0.75rem; margin-top:5px; font-weight:bold;">Líder: ${dep.lider}</p>` : ''}
+                    </div>
+                </div>`;
+        });
+    } catch (e) { 
+        console.error(e);
+        container.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar departamentos.</p>`; 
+    }
+}
 
 // --- OFERTAS E DÍZIMOS ---
 async function carregarOfertas() {
