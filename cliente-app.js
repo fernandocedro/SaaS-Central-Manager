@@ -98,6 +98,9 @@ function renderizarGradeVideos(lista) {
 
     lista.forEach((video) => {
         const thumb = video.thumbnail || 'https://placehold.co/300x150/222/white?text=Sem+Thumbnail';
+        const serieLimpa = (video.serie || "Sem Título").replace(/'/g, "\\'");
+        const descLimpa = (video.descricao || "").replace(/'/g, "\\'");
+        
         container.innerHTML += `
             <div class="card-video">
                 <img src="${thumb}" class="thumb-video">
@@ -106,7 +109,7 @@ function renderizarGradeVideos(lista) {
                     <h4>${video.serie || 'Sem Título'}</h4>
                     <p>${video.descricao || ''}</p>
                     <div class="acoes-video">
-                        <button onclick="window.prepararEdicaoVideo('${video.id}', '${(video.serie || "").replace(/'/g, "\\'")}', '${(video.descricao || "").replace(/'/g, "\\'")}')" class="btn-edit-sm"><i class="fas fa-edit"></i></button>
+                        <button onclick="window.prepararEdicaoVideo('${video.id}', '${serieLimpa}', '${descLimpa}')" class="btn-edit-sm"><i class="fas fa-edit"></i></button>
                         <button onclick="window.excluirVideo('${video.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
@@ -120,7 +123,7 @@ document.getElementById('formConteudo')?.addEventListener('submit', async (e) =>
     const inputThumb = document.getElementById('videoThumb');
     const thumbFile = inputThumb?.files ? inputThumb.files[0] : null;
     
-    btn.disabled = true; btn.innerText = "Publicando...";
+    if (btn) { btn.disabled = true; btn.innerText = "Publicando..."; }
 
     try {
         let thumbUrl = "";
@@ -131,17 +134,17 @@ document.getElementById('formConteudo')?.addEventListener('submit', async (e) =>
         }
         await addDoc(collection(db, "clientes", idClienteDoc, "conteudos"), {
             tipo: "video",
-            url: document.getElementById('videoUrl').value,
-            serie: document.getElementById('videoSerie').value,
-            descricao: document.getElementById('videoDesc').value,
+            url: document.getElementById('videoUrl')?.value || "",
+            serie: document.getElementById('videoSerie')?.value || "",
+            descricao: document.getElementById('videoDesc')?.value || "",
             thumbnail: thumbUrl,
             dataCriacao: serverTimestamp()
         });
         alert("Vídeo publicado!");
         e.target.reset();
         window.mostrarSessao('list');
-    } catch (err) { alert("Erro ao publicar vídeo."); }
-    finally { btn.disabled = false; btn.innerText = "Publicar Vídeo"; }
+    } catch (err) { console.error(err); alert("Erro ao publicar vídeo."); }
+    finally { if (btn) { btn.disabled = false; btn.innerText = "Publicar Vídeo"; } }
 });
 
 // --- 5. GESTÃO DE NOTÍCIAS ---
@@ -158,8 +161,8 @@ function carregarNoticias() {
                 <div class="card-video">
                     <img src="${n.capa || 'https://placehold.co/300x150/222/white?text=Noticia'}" class="thumb-video">
                     <div class="info-video">
-                        <h4>${n.titulo}</h4>
-                        <p>${n.texto.substring(0, 80)}...</p>
+                        <h4>${n.titulo || ''}</h4>
+                        <p>${n.texto?.substring(0, 80) || ''}...</p>
                         <div class="acoes-video">
                             <button onclick="window.excluirNoticia('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i> Excluir</button>
                         </div>
@@ -175,7 +178,7 @@ document.getElementById('formNoticia')?.addEventListener('submit', async (e) => 
     const inputImg = document.getElementById('noticiaImg');
     const imgFile = inputImg?.files ? inputImg.files[0] : null;
     
-    btn.disabled = true; btn.innerText = "Publicando...";
+    if (btn) { btn.disabled = true; btn.innerText = "Publicando..."; }
 
     try {
         let imgUrl = "";
@@ -185,16 +188,16 @@ document.getElementById('formNoticia')?.addEventListener('submit', async (e) => 
             imgUrl = await getDownloadURL(storageRef);
         }
         await addDoc(collection(db, "clientes", idClienteDoc, "noticias"), {
-            titulo: document.getElementById('noticiaTitulo').value,
-            texto: document.getElementById('noticiaTexto').value,
+            titulo: document.getElementById('noticiaTitulo')?.value || "",
+            texto: document.getElementById('noticiaTexto')?.value || "",
             capa: imgUrl,
             dataCriacao: serverTimestamp()
         });
         alert("Notícia publicada!");
         e.target.reset();
         carregarNoticias();
-    } catch (err) { alert("Erro ao publicar notícia."); }
-    finally { btn.disabled = false; btn.innerText = "Publicar Notícia"; }
+    } catch (err) { console.error(err); alert("Erro ao publicar notícia."); }
+    finally { if (btn) { btn.disabled = false; btn.innerText = "Publicar Notícia"; } }
 });
 
 // --- 6. GESTÃO DE EVENTOS ---
@@ -204,7 +207,7 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
     const inputImg = document.getElementById('eventoImg');
     const imgFile = inputImg?.files ? inputImg.files[0] : null;
     
-    btn.disabled = true; btn.innerText = "Publicando...";
+    if (btn) { btn.disabled = true; btn.innerText = "Publicando..."; }
 
     try {
         let imgUrl = "";
@@ -214,26 +217,27 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
             imgUrl = await getDownloadURL(storageRef);
         }
 
-        const temInscricao = document.getElementById('checkInscricao').checked;
-        const eBtnPago = document.getElementById('checkPago').checked;
+        const temInscricao = document.getElementById('checkInscricao')?.checked || false;
+        const eBtnPago = document.getElementById('checkPago')?.checked || false;
 
         await addDoc(collection(db, "clientes", idClienteDoc, "eventos"), {
-            titulo: document.getElementById('eventoTitulo').value,
-            descricao: document.getElementById('eventoDesc').value,
+            titulo: document.getElementById('eventoTitulo')?.value || "",
+            descricao: document.getElementById('eventoDesc')?.value || "",
             capa: imgUrl,
             exigeInscricao: temInscricao,
             pago: eBtnPago,
-            linkPagamento: eBtnPago ? document.getElementById('eventoLinkPagamento').value : "",
+            linkPagamento: eBtnPago ? document.getElementById('eventoLinkPagamento')?.value : "",
             perguntasObrigatorias: temInscricao ? ["Nome Completo", "CPF", "Igreja"] : [],
             dataCriacao: serverTimestamp()
         });
 
         alert("Evento publicado com sucesso!");
         e.target.reset();
-        if(document.getElementById('blocoInscricao')) document.getElementById('blocoInscricao').style.display = 'none';
+        const bloco = document.getElementById('blocoInscricao');
+        if(bloco) bloco.style.display = 'none';
         carregarEventos();
-    } catch (err) { alert("Erro ao publicar evento."); }
-    finally { btn.disabled = false; btn.innerText = "Publicar Evento"; }
+    } catch (err) { console.error(err); alert("Erro ao publicar evento."); }
+    finally { if (btn) { btn.disabled = false; btn.innerText = "Publicar Evento"; } }
 });
 
 function carregarEventos() {
@@ -253,9 +257,9 @@ function carregarEventos() {
                 <div class="card-video">
                     <img src="${ev.capa || 'https://placehold.co/300x150/222/white?text=Evento'}" class="thumb-video">
                     <div class="info-video">
-                        <h4>${ev.titulo}</h4>
+                        <h4>${ev.titulo || ''}</h4>
                         <span class="badge-serie">${ev.exigeInscricao ? "Com Inscrição" : "Evento Aberto"}</span>
-                        <p>${ev.descricao.substring(0, 60)}...</p>
+                        <p>${ev.descricao?.substring(0, 60) || ''}...</p>
                         <div class="acoes-video">
                             ${btnInscritos}
                             <button onclick="window.excluirEvento('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
@@ -270,7 +274,8 @@ window.verInscritos = async (idEvento) => {
     const tbody = document.getElementById('listaInscritosBody');
     if (!tbody) return;
     tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Carregando...</td></tr>";
-    document.getElementById('modalInscritos').style.display = 'flex';
+    const modal = document.getElementById('modalInscritos');
+    if (modal) modal.style.display = 'flex';
 
     try {
         const q = query(collection(db, "clientes", idClienteDoc, "eventos", idEvento, "inscritos"), orderBy("dataInscricao", "desc"));
@@ -298,7 +303,10 @@ window.verInscritos = async (idEvento) => {
     }
 };
 
-window.fecharModalInscritos = () => { document.getElementById('modalInscritos').style.display = 'none'; };
+window.fecharModalInscritos = () => { 
+    const modal = document.getElementById('modalInscritos');
+    if (modal) modal.style.display = 'none'; 
+};
 
 // --- 7. GESTÃO DE OFERTAS ---
 document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
@@ -307,7 +315,7 @@ document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     const inputImg = document.getElementById('ofertaImg');
     const imgFile = inputImg?.files ? inputImg.files[0] : null;
 
-    btn.disabled = true; btn.innerText = "Salvando...";
+    if (btn) { btn.disabled = true; btn.innerText = "Salvando..."; }
 
     try {
         let imgUrl = "https://placehold.co/300x150/222/white?text=Oferta"; 
@@ -318,8 +326,8 @@ document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
         }
 
         await addDoc(collection(db, "clientes", idClienteDoc, "ofertas"), {
-            titulo: document.getElementById('ofertaTitulo').value,
-            link: document.getElementById('ofertaLink').value,
+            titulo: document.getElementById('ofertaTitulo')?.value || "",
+            link: document.getElementById('ofertaLink')?.value || "",
             capa: imgUrl,
             dataCriacao: serverTimestamp()
         });
@@ -330,7 +338,7 @@ document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     } catch (err) { 
         alert("Erro ao cadastrar oferta."); 
     } finally { 
-        btn.disabled = false; btn.innerText = "Cadastrar Opção de Oferta"; 
+        if (btn) { btn.disabled = false; btn.innerText = "Cadastrar Opção de Oferta"; }
     }
 });
 
@@ -347,8 +355,8 @@ function carregarOfertas() {
                 <div class="card-video">
                     <img src="${of.capa}" class="thumb-video">
                     <div class="info-video">
-                        <h4>${of.titulo}</h4>
-                        <p style="font-size: 12px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${of.link}</p>
+                        <h4>${of.titulo || ''}</h4>
+                        <p style="font-size: 12px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${of.link || ''}</p>
                         <div class="acoes-video">
                             <a href="${of.link}" target="_blank" class="btn-edit-sm" style="background: #eab308; text-decoration: none; display: flex; align-items: center; justify-content: center;" title="Testar Link Externo">
                                 <i class="fas fa-external-link-alt"></i>
@@ -384,10 +392,10 @@ function carregarUsuariosApp() {
             tbody.innerHTML += `
                 <tr>
                     <td>${user.nome || 'Membro'}</td>
-                    <td>${user.email}</td>
+                    <td>${user.email || ''}</td>
                     <td>${dataFmt}</td>
                     <td>
-                        <button onclick="window.abrirModalGerenciarUsuario('${docSnap.id}', '${user.nome}', '${user.email}')" class="btn-edit-sm">
+                        <button onclick="window.abrirModalGerenciarUsuario('${docSnap.id}', '${(user.nome||"").replace(/'/g, "\\'")}', '${user.email}')" class="btn-edit-sm">
                             <i class="fas fa-user-shield"></i> Gerenciar
                         </button>
                     </td>
@@ -397,18 +405,25 @@ function carregarUsuariosApp() {
 }
 
 window.abrirModalGerenciarUsuario = (id, nome, email) => {
-    document.getElementById('editUserId').value = id;
-    document.getElementById('editUserNome').innerText = nome;
-    document.getElementById('editUserEmail').innerText = email;
-    document.getElementById('modalGerenciarUsuario').style.display = 'flex';
+    const elId = document.getElementById('editUserId');
+    const elNome = document.getElementById('editUserNome');
+    const elEmail = document.getElementById('editUserEmail');
+    const modal = document.getElementById('modalGerenciarUsuario');
+
+    if (elId) elId.value = id;
+    if (elNome) elNome.innerText = nome;
+    if (elEmail) elEmail.innerText = email;
+    if (modal) modal.style.display = 'flex';
 };
 
 window.fecharModalGerenciarUsuario = () => {
-    document.getElementById('modalGerenciarUsuario').style.display = 'none';
+    const modal = document.getElementById('modalGerenciarUsuario');
+    if (modal) modal.style.display = 'none';
 };
 
 window.resetarSenhaUsuario = async () => {
-    const email = document.getElementById('editUserEmail').innerText;
+    const email = document.getElementById('editUserEmail')?.innerText;
+    if (!email) return;
     try {
         await sendPasswordResetEmail(auth, email);
         alert("E-mail de redefinição de senha enviado para: " + email);
@@ -418,8 +433,8 @@ window.resetarSenhaUsuario = async () => {
 };
 
 window.excluirUsuarioApp = async () => {
-    const id = document.getElementById('editUserId').value;
-    if (confirm("Deseja remover o acesso deste membro?")) {
+    const id = document.getElementById('editUserId')?.value;
+    if (id && confirm("Deseja remover o acesso deste membro?")) {
         await deleteDoc(doc(db, "usuarios_app", id));
         alert("Membro removido.");
         window.fecharModalGerenciarUsuario();
@@ -430,19 +445,19 @@ window.excluirUsuarioApp = async () => {
 document.getElementById('formLeitura')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
-    btn.disabled = true; btn.innerText = "Salvando...";
+    if (btn) { btn.disabled = true; btn.innerText = "Salvando..."; }
     try {
         await addDoc(collection(db, "clientes", idClienteDoc, "leituras"), {
-            dataLeitura: document.getElementById('leituraData').value,
-            versos: document.getElementById('leituraVersos').value,
-            texto: document.getElementById('leituraTexto').value,
+            dataLeitura: document.getElementById('leituraData')?.value || "",
+            versos: document.getElementById('leituraVersos')?.value || "",
+            texto: document.getElementById('leituraTexto')?.value || "",
             dataCriacao: serverTimestamp()
         });
         alert("Leitura agendada!");
         e.target.reset();
         carregarLeituras();
     } catch (err) { alert("Erro ao salvar leitura."); }
-    finally { btn.disabled = false; btn.innerText = "Agendar Leitura"; }
+    finally { if (btn) { btn.disabled = false; btn.innerText = "Agendar Leitura"; } }
 });
 
 function carregarLeituras() {
@@ -454,13 +469,13 @@ function carregarLeituras() {
         container.innerHTML = "";
         snapshot.forEach((docSnap) => {
             const lei = docSnap.data();
-            const dataFmt = lei.dataLeitura.split('-').reverse().join('/');
+            const dataFmt = lei.dataLeitura ? lei.dataLeitura.split('-').reverse().join('/') : '---';
             container.innerHTML += `
                 <div class="card-video">
                     <div class="info-video">
                         <span class="badge-serie">${dataFmt}</span>
-                        <h4>${lei.versos}</h4>
-                        <p>${lei.texto.substring(0, 100)}...</p>
+                        <h4>${lei.versos || ''}</h4>
+                        <p>${lei.texto?.substring(0, 100) || ''}...</p>
                         <div class="acoes-video">
                             <button onclick="window.excluirLeitura('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
                         </div>
@@ -472,7 +487,7 @@ function carregarLeituras() {
 
 window.excluirLeitura = async (id) => { if (confirm("Excluir leitura?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "leituras", id)); };
 
-// --- GESTÃO DE ORAÇÕES (SINCRONIZADA COM APP) ---
+// --- GESTÃO DE ORAÇÕES ---
 function carregarOracoes() {
     if (!idClienteDoc) return;
     const tbody = document.getElementById('tabelaOracoesBody');
@@ -516,22 +531,22 @@ window.excluirOracao = async (id) => {
     }
 };
 
-// --- NOVAS FUNCIONALIDADES: NOTIFICAÇÕES PUSH ---
+// --- NOTIFICAÇÕES PUSH ---
 document.getElementById('formPush')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!confirm("Enviar notificação para todos?")) return;
     const btn = e.target.querySelector('button');
-    btn.disabled = true; btn.innerText = "Enviando...";
+    if (btn) { btn.disabled = true; btn.innerText = "Enviando..."; }
     try {
         await addDoc(collection(db, "clientes", idClienteDoc, "notificacoes_push"), {
-            titulo: document.getElementById('pushTitulo').value,
-            mensagem: document.getElementById('pushMensagem').value,
+            titulo: document.getElementById('pushTitulo')?.value || "",
+            mensagem: document.getElementById('pushMensagem')?.value || "",
             dataEnvio: serverTimestamp()
         });
         alert("Comando de notificação enviado!");
         e.target.reset();
     } catch (err) { alert("Erro ao enviar push."); }
-    finally { btn.disabled = false; btn.innerText = "Disparar Notificação"; }
+    finally { if (btn) { btn.disabled = false; btn.innerText = "Disparar Notificação"; } }
 });
 
 // --- 9. CORE (AUTH E IDENTIDADE) ---
@@ -555,8 +570,13 @@ function aplicarIdentidadeVisual(dados) {
 }
 
 onAuthStateChanged(auth, (user) => {
-    if (!user) window.location.href = "login-cliente.html";
-    else buscarDadosCliente(user.uid);
+    if (!user) {
+        if (!window.location.href.includes("login-cliente.html")) {
+            window.location.href = "login-cliente.html";
+        }
+    } else {
+        buscarDadosCliente(user.uid);
+    }
 });
 
 // FUNÇÕES GLOBAIS DE EXCLUSÃO
@@ -566,11 +586,17 @@ window.excluirEvento = async (id) => { if (confirm("Excluir evento?")) await del
 
 // MODAL EDIÇÃO VÍDEO E SENHA
 window.prepararEdicaoVideo = (id, serie, desc) => {
-    document.getElementById('editVideoId').value = id;
-    document.getElementById('editVideoSerie').value = serie;
-    document.getElementById('editVideoDesc').value = desc;
-    document.getElementById('modalEditarVideo').style.display = 'flex';
+    const elId = document.getElementById('editVideoId');
+    const elSerie = document.getElementById('editVideoSerie');
+    const elDesc = document.getElementById('editVideoDesc');
+    const modal = document.getElementById('modalEditarVideo');
+
+    if (elId) elId.value = id;
+    if (elSerie) elSerie.value = serie;
+    if (elDesc) elDesc.value = desc;
+    if (modal) modal.style.display = 'flex';
 };
+
 window.fecharModalEdicao = () => {
     const modal = document.getElementById('modalEditarVideo');
     if(modal) modal.style.display = 'none';
@@ -578,10 +604,12 @@ window.fecharModalEdicao = () => {
 
 document.getElementById('formEditarVideo')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const id = document.getElementById('editVideoId')?.value;
+    if (!id) return;
     try {
-        await updateDoc(doc(db, "clientes", idClienteDoc, "conteudos", document.getElementById('editVideoId').value), {
-            serie: document.getElementById('editVideoSerie').value,
-            descricao: document.getElementById('editVideoDesc').value
+        await updateDoc(doc(db, "clientes", idClienteDoc, "conteudos", id), {
+            serie: document.getElementById('editVideoSerie')?.value || "",
+            descricao: document.getElementById('editVideoDesc')?.value || ""
         });
         window.fecharModalEdicao();
     } catch(err) { alert("Erro ao editar vídeo."); }
