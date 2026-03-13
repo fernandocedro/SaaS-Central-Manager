@@ -21,6 +21,23 @@ const storage = getStorage(app);
 let idClienteDoc = null; 
 let todosOsVideos = []; 
 
+// --- FUNÇÃO DE APOIO: COMPRESSÃO DE IMAGENS (Resolve o erro de 1800ms) ---
+async function otimizarImagem(arquivo) {
+    if (!arquivo || !arquivo.type.startsWith('image/')) return arquivo;
+    const opcoes = {
+        maxSizeMB: 0.8, 
+        maxWidthOrHeight: 1024,
+        useWebWorker: true
+    };
+    try {
+        // @ts-ignore (A biblioteca é carregada via CDN no HTML)
+        return await imageCompression(arquivo, opcoes);
+    } catch (error) {
+        console.error("Erro na compressão, enviando original:", error);
+        return arquivo;
+    }
+}
+
 // --- 2. NAVEGAÇÃO ENTRE ABAS ---
 window.mostrarSessao = (sessao) => {
     const secoesIds = [
@@ -121,16 +138,20 @@ document.getElementById('formConteudo')?.addEventListener('submit', async (e) =>
     e.preventDefault();
     const btn = document.getElementById('btnAcaoPrincipal');
     const inputThumb = document.getElementById('videoThumb');
-    const thumbFile = inputThumb?.files?.[0]; // Uso do optional chaining
+    const thumbFile = inputThumb?.files?.[0];
     
-    if (btn) { btn.disabled = true; btn.innerText = "Publicando..."; }
+    if (btn) { btn.disabled = true; btn.innerText = "Processando..."; }
 
     try {
         let thumbUrl = "";
         if (thumbFile) {
+            btn.innerText = "Otimizando Imagem...";
+            const arquivoOtimizado = await otimizarImagem(thumbFile);
+            
             const storageRef = ref(storage, `clientes/${idClienteDoc}/conteudos/${Date.now()}_${thumbFile.name}`);
-            await uploadBytes(storageRef, thumbFile);
-            thumbUrl = await getDownloadURL(storageRef);
+            btn.innerText = "Enviando...";
+            const snapshot = await uploadBytes(storageRef, arquivoOtimizado);
+            thumbUrl = await getDownloadURL(snapshot.ref);
         }
         await addDoc(collection(db, "clientes", idClienteDoc, "conteudos"), {
             tipo: "video",
@@ -183,9 +204,10 @@ document.getElementById('formNoticia')?.addEventListener('submit', async (e) => 
     try {
         let imgUrl = "";
         if (imgFile) {
+            const arquivoOtimizado = await otimizarImagem(imgFile);
             const storageRef = ref(storage, `clientes/${idClienteDoc}/noticias/${Date.now()}_${imgFile.name}`);
-            await uploadBytes(storageRef, imgFile);
-            imgUrl = await getDownloadURL(storageRef);
+            const snapshot = await uploadBytes(storageRef, arquivoOtimizado);
+            imgUrl = await getDownloadURL(snapshot.ref);
         }
         await addDoc(collection(db, "clientes", idClienteDoc, "noticias"), {
             titulo: document.getElementById('noticiaTitulo')?.value || "",
@@ -212,9 +234,10 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
     try {
         let imgUrl = "";
         if (imgFile) {
+            const arquivoOtimizado = await otimizarImagem(imgFile);
             const storageRef = ref(storage, `clientes/${idClienteDoc}/eventos/${Date.now()}_${imgFile.name}`);
-            await uploadBytes(storageRef, imgFile);
-            imgUrl = await getDownloadURL(storageRef);
+            const snapshot = await uploadBytes(storageRef, arquivoOtimizado);
+            imgUrl = await getDownloadURL(snapshot.ref);
         }
 
         const temInscricao = document.getElementById('checkInscricao')?.checked || false;
@@ -231,7 +254,7 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
             dataCriacao: serverTimestamp()
         });
 
-        alert("Evento publicado com sucesso!");
+        alert("Evento publicado!");
         e.target.reset();
         if(document.getElementById('blocoInscricao')) document.getElementById('blocoInscricao').style.display = 'none';
         carregarEventos();
@@ -319,9 +342,10 @@ document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     try {
         let imgUrl = "https://placehold.co/300x150/222/white?text=Oferta"; 
         if (imgFile) {
+            const arquivoOtimizado = await otimizarImagem(imgFile);
             const storageRef = ref(storage, `clientes/${idClienteDoc}/ofertas/${Date.now()}_${imgFile.name}`);
-            await uploadBytes(storageRef, imgFile);
-            imgUrl = await getDownloadURL(storageRef);
+            const snapshot = await uploadBytes(storageRef, arquivoOtimizado);
+            imgUrl = await getDownloadURL(snapshot.ref);
         }
 
         await addDoc(collection(db, "clientes", idClienteDoc, "ofertas"), {
@@ -331,7 +355,7 @@ document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
             dataCriacao: serverTimestamp()
         });
 
-        alert("Opção de oferta cadastrada!");
+        alert("Oferta cadastrada!");
         e.target.reset();
         carregarOfertas();
     } catch (err) { alert("Erro ao cadastrar oferta."); } 
