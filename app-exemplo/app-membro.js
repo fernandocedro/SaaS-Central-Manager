@@ -219,36 +219,68 @@ window.mostrarSessao = (aba) => {
     }
 };
 
-// --- FUNÇÃO DE OFERTAS (Vazia para evitar erro de ReferenceError) ---
-// --- FUNÇÃO DE OFERTAS (ATUALIZADA) ---
-window.carregarOfertas = () => {
+// --- FUNÇÃO DE OFERTAS (ATUALIZADA PARA BUSCAR DO FIREBASE) ---
+window.carregarOfertas = async () => {
     const container = document.getElementById('listaOfertasContainer');
-    if (!container) return;
+    if (!container || !idCliente) return;
 
-    // Aqui você pode personalizar os dados da sua igreja
-    container.innerHTML = `
-        <div style="background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #333; text-align: center; margin-bottom: 20px;">
-            <i class="fas fa-heart" style="font-size: 2rem; color: var(--cor-primaria); margin-bottom: 15px;"></i>
-            <h4 style="color: #fff; margin-bottom: 10px;">Dízimos e Ofertas</h4>
-            <p style="color: #bbb; font-size: 0.9rem; margin-bottom: 20px;">"Cada um dê conforme determinou em seu coração, não com pesar ou por obrigação, pois Deus ama quem dá com alegria." <br><small>(2 Coríntios 9:7)</small></p>
-            
-            <div style="background: #222; padding: 15px; border-radius: 10px; border: 1px dashed var(--cor-primaria); margin-bottom: 15px;">
-                <span style="color: #888; font-size: 0.8rem; display: block; margin-bottom: 5px;">CHAVE PIX</span>
-                <strong style="color: #fff; font-size: 1.1rem; letter-spacing: 1px;">suachavepix@aqui.com</strong>
-                <button onclick="navigator.clipboard.writeText('suachavepix@aqui.com').then(() => alert('Pix copiado!'))" 
-                        style="display: block; width: 100%; margin-top: 10px; background: transparent; border: 1px solid var(--cor-primaria); color: var(--cor-primaria); padding: 5px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
-                    <i class="far fa-copy"></i> Copiar Chave Pix
-                </button>
-            </div>
+    container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando formas de contribuição...</p>`;
 
-            <div style="text-align: left; color: #bbb; font-size: 0.9rem;">
-                <p><strong>Conta Bancária:</strong></p>
-                <p>Banco: Nome do Banco</p>
-                <p>Agência: 0000 | Conta: 00000-0</p>
-                <p>CNPJ: 00.000.000/0001-00</p>
-            </div>
-        </div>
-    `;
+    try {
+        const colRef = collection(db, "clientes", idCliente, "ofertas");
+        const snap = await getDocs(colRef);
+
+        if (snap.empty) {
+            container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhuma forma de oferta cadastrada.</p>`;
+            return;
+        }
+
+        container.innerHTML = "";
+        snap.forEach((docSnap) => {
+            const oferta = docSnap.data();
+            const idDoc = docSnap.id;
+
+            container.innerHTML += `
+                <div style="background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
+                        <i class="fas fa-hand-holding-heart" style="font-size: 1.5rem; color: var(--cor-primaria);"></i>
+                        <h4 style="color: #fff; margin: 0;">${oferta.titulo || 'Dízimos e Ofertas'}</h4>
+                    </div>
+                    
+                    ${oferta.descricao ? `<p style="color: #bbb; font-size: 0.9rem; margin-bottom: 15px;">${oferta.descricao}</p>` : ''}
+
+                    ${oferta.chavePix ? `
+                        <div style="background: #222; padding: 15px; border-radius: 10px; border: 1px dashed var(--cor-primaria); margin-bottom: 15px; text-align: center;">
+                            <span style="color: #888; font-size: 0.8rem; display: block; margin-bottom: 5px;">CHAVE PIX</span>
+                            <strong id="pix-${idDoc}" style="color: #fff; font-size: 1rem; word-break: break-all;">${oferta.chavePix}</strong>
+                            <button onclick="window.copiarTexto('pix-${idDoc}')" 
+                                    style="display: block; width: 100%; margin-top: 10px; background: transparent; border: 1px solid var(--cor-primaria); color: var(--cor-primaria); padding: 8px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">
+                                <i class="far fa-copy"></i> Copiar Chave Pix
+                            </button>
+                        </div>
+                    ` : ''}
+
+                    ${oferta.banco ? `
+                        <div style="text-align: left; color: #bbb; font-size: 0.85rem; background: #222; padding: 12px; border-radius: 10px;">
+                            <p style="margin: 2px 0;"><strong>Banco:</strong> ${oferta.banco}</p>
+                            <p style="margin: 2px 0;"><strong>Agência:</strong> ${oferta.agencia || ''} | <strong>Conta:</strong> ${oferta.conta || ''}</p>
+                            ${oferta.beneficiario ? `<p style="margin: 2px 0;"><strong>Favorecido:</strong> ${oferta.beneficiario}</p>` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+    } catch (error) {
+        console.error("Erro ao carregar ofertas:", error);
+        container.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar dados.</p>`;
+    }
+};
+
+window.copiarTexto = (id) => {
+    const texto = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(texto).then(() => {
+        alert("Copiado para a área de transferência!");
+    });
 };
 
 // --- DEPARTAMENTOS ---
@@ -644,40 +676,4 @@ window.toggleDataCasamento = () => {
     if(divCasamento) divCasamento.style.display = (status === 'sim') ? 'block' : 'none';
 };
 
-window.salvarPerfil = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const btn = document.querySelector('#sessaoPerfil button');
-    const textoOriginal = btn.innerText;
-    btn.innerText = "Salvando...";
-
-    const dados = {
-        nome: document.getElementById('perfilNome').value,
-        whatsapp: document.getElementById('perfilTel').value,
-        nascimento: document.getElementById('perfilNascimento').value,
-        status: document.getElementById('perfilStatus').value,
-        conversao: document.getElementById('perfilConversao').value,
-        batismo: document.getElementById('perfilBatismo').value,
-        casado: document.getElementById('perfilCasado').value,
-        dataCasamento: document.getElementById('perfilDataCasamento').value,
-        ultimaAtualizacao: new Date()
-    };
-
-    try {
-        await setDoc(doc(db, "usuarios_app", user.uid), dados, { merge: true });
-        alert("Perfil atualizado com sucesso!");
-        if(document.getElementById('nomeMembro')) document.getElementById('nomeMembro').innerText = dados.nome;
-    } catch (error) {
-        console.error(error);
-        alert("Erro ao salvar perfil.");
-    } finally {
-        btn.innerText = textoOriginal;
-    }
-};
-
-window.logout = () => { signOut(auth); };
-
-// Inicializa o App
 inicializarApp();
-
