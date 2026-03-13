@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { 
-    getFirestore, doc, getDoc, collection, query, where, getDocs, orderBy, limit, 
+    getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs, orderBy, limit, 
     addDoc, updateDoc, deleteDoc, onSnapshot 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { 
@@ -30,11 +30,10 @@ const livrosBiblia = [
     "Gênesis", "Êxodo", "Levítico", "Números", "Deuteronômio", "Josué", "Juízes", "Rute", "1 Samuel", "2 Samuel", "1 Reis", "2 Reis", "1 Crônicas", "2 Crônicas", "Esdras", "Neemias", "Ester", "Jó", "Salmos", "Provérbios", "Eclesiastes", "Cantares", "Isaías", "Jeremias", "Lamentações", "Ezequiel", "Daniel", "Oséias", "Joel", "Amós", "Obadias", "Jonas", "Miquéias", "Naum", "Habacuque", "Sofonias", "Ageu", "Zacarias", "Malaquias",
     "Mateus", "Marcos", "Lucas", "João", "Atos", "Romanos", "1 Coríntios", "2 Coríntios", "Gálatas", "Efésios", "Filipenses", "Colossenses", "1 Tessalonicenses", "2 Tessalonicenses", "1 Timóteo", "2 Timóteo", "Tito", "Filemom", "Hebreus", "Tiago", "1 Pedro", "2 Pedro", "1 João", "2 João", "3 João", "Judas", "Apocalipse"
 ];
+
 let livroSelecionado = "";
 let unsubscribeAnotacoes = null;
 let unsubscribeOracoes = null;
-
-// VARIÁVEIS PARA CONTROLE DE LEITURA
 let filtroLeituraAtual = 'pendentes';
 let leiturasCache = [];
 
@@ -52,8 +51,7 @@ window.mudarModoAuth = (modo) => {
     if (modo === 'cadastro') {
         titulo.innerText = "Criar Conta";
         subtitulo.innerText = "Preencha os dados abaixo";
-        campoNome.style.display = "block";
-        campoSenha.style.display = "block";
+        if(campoNome) campoNome.style.display = "block";
         btnPrincipal.innerText = "Cadastrar agora";
         toggleText.innerHTML = 'Já tem conta? <a href="#" onclick="window.mudarModoAuth(\'login\')" style="color:var(--cor-primaria); font-weight:bold;">Fazer Login</a>';
         linkRecuperar.style.display = "none";
@@ -61,7 +59,7 @@ window.mudarModoAuth = (modo) => {
     } else if (modo === 'recuperar') {
         titulo.innerText = "Recuperar Senha";
         subtitulo.innerText = "Digite seu e-mail para receber o link";
-        campoNome.style.display = "none";
+        if(campoNome) campoNome.style.display = "none";
         campoSenha.style.display = "none";
         btnPrincipal.innerText = "Enviar Link";
         toggleText.style.display = "none";
@@ -70,7 +68,7 @@ window.mudarModoAuth = (modo) => {
     } else {
         titulo.innerText = "Bem-vindo";
         subtitulo.innerText = "Acesse sua conta para continuar";
-        campoNome.style.display = "none";
+        if(campoNome) campoNome.style.display = "none";
         campoSenha.style.display = "block";
         btnPrincipal.innerText = "Entrar";
         toggleText.style.display = "block";
@@ -81,15 +79,26 @@ window.mudarModoAuth = (modo) => {
 };
 
 window.loginGoogle = async () => {
-    try { await signInWithPopup(auth, googleProvider); } 
-    catch (error) { console.error("Erro Google Auth:", error); alert("Erro ao entrar com Google."); }
+    try { 
+        const result = await signInWithPopup(auth, googleProvider);
+        // Salva ou atualiza os dados do usuário no Firestore após login social
+        await setDoc(doc(db, "usuarios_app", result.user.uid), {
+            nome: result.user.displayName,
+            email: result.user.email,
+            fotoUrl: result.user.photoURL,
+            ultimaAtividade: new Date()
+        }, { merge: true });
+    } catch (error) { 
+        console.error("Erro Google Auth:", error); 
+        alert("Erro ao entrar com Google."); 
+    }
 };
 
 document.getElementById('formAuth')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('authEmail').value;
     const senha = document.getElementById('authSenha').value;
-    const nome = document.getElementById('authNome').value;
+    const nome = document.getElementById('authNome')?.value;
     const btnTexto = document.getElementById('btnAuthPrincipal').innerText;
 
     try {
@@ -97,21 +106,27 @@ document.getElementById('formAuth')?.addEventListener('submit', async (e) => {
             await signInWithEmailAndPassword(auth, email, senha);
         } else if (btnTexto === "Cadastrar agora") {
             const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-            await updateDoc(doc(db, "usuarios_app", userCredential.user.uid), {
-                nome: nome, email: email, dataCriacao: new Date()
-            }, { merge: true });
+            // setDoc é usado aqui pois o documento pode não existir ainda
+            await setDoc(doc(db, "usuarios_app", userCredential.user.uid), {
+                nome: nome, 
+                email: email, 
+                dataCriacao: new Date()
+            });
         } else if (btnTexto === "Enviar Link") {
             await sendPasswordResetEmail(auth, email);
             alert("E-mail de recuperação enviado!");
             window.mudarModoAuth('login');
         }
-    } catch (error) { alert("Erro: " + error.message); }
+    } catch (error) { 
+        alert("Erro: " + error.message); 
+    }
 });
 
 // --- INICIALIZAÇÃO ---
 async function inicializarApp() {
     if (!idCliente) { alert("Erro: ID do cliente não encontrado."); return; }
 
+    // Carrega branding do cliente
     const docRef = doc(db, "clientes", idCliente);
     const docSnap = await getDoc(docRef);
 
@@ -132,14 +147,17 @@ async function inicializarApp() {
         const fotoMenu = document.getElementById('fotoMembroMenu');
 
         if (user) {
-            authContainer.style.display = 'none';
+            if(authContainer) authContainer.style.display = 'none';
+            
+            // Busca dados complementares do Firestore
             const userDoc = await getDoc(doc(db, "usuarios_app", user.uid));
             if (userDoc.exists()) {
                 const userData = userDoc.data();
-                if(nomeDisplay) nomeDisplay.innerText = userData.nome || "Membro";
-                if(userData.fotoUrl) {
-                    if(fotoDisplay) fotoDisplay.src = userData.fotoUrl;
-                    if(fotoMenu) fotoMenu.src = userData.fotoUrl;
+                if(nomeDisplay) nomeDisplay.innerText = userData.nome || user.displayName || "Membro";
+                if(userData.fotoUrl || user.photoURL) {
+                    const urlFinal = userData.fotoUrl || user.photoURL;
+                    if(fotoDisplay) fotoDisplay.src = urlFinal;
+                    if(fotoMenu) fotoMenu.src = urlFinal;
                 }
             } else {
                 if(nomeDisplay) nomeDisplay.innerText = user.displayName || "Membro";
@@ -147,7 +165,7 @@ async function inicializarApp() {
             }
             window.mostrarSessao('home');
         } else {
-            authContainer.style.display = 'flex';
+            if(authContainer) authContainer.style.display = 'flex';
         }
     });
 }
@@ -169,6 +187,7 @@ window.mostrarSessao = (aba) => {
     const alvo = document.getElementById('sessao' + aba.charAt(0).toUpperCase() + aba.slice(1));
     if(alvo) alvo.style.display = 'block';
 
+    // Trigger de carregamento por aba
     if (aba === 'home') {
         carregarVideosHome();
         carregarNoticiasHome();
@@ -188,49 +207,38 @@ window.mostrarSessao = (aba) => {
     }
 };
 
-// --- AGENDA DE EVENTOS (VERSÃO ATUALIZADA COM DEBUG) ---
+// --- AGENDA DE EVENTOS ---
 async function carregarAgenda() {
     if (!idCliente) return;
     const container = document.getElementById('listaEventos');
     if (!container) return;
 
-    console.log("AGENDA: Buscando eventos para o cliente:", idCliente);
     container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando agenda...</p>`;
 
     try {
-        // 1. Buscamos a coleção (Removi o orderBy aqui para evitar erro de índice se você ainda não o criou)
         const colRef = collection(db, "clientes", idCliente, "eventos");
         const snap = await getDocs(colRef);
         
-        console.log("AGENDA: Documentos brutos encontrados:", snap.size);
-
         if (snap.empty) {
             container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhum evento programado.</p>`;
             return;
         }
 
-        // 2. Colocamos em um array para ordenar via Javascript (Garante que funcione sem índice)
         let eventos = [];
         snap.forEach(doc => {
             eventos.push({ id: doc.id, ...doc.data() });
         });
 
-        // 3. Ordenamos por data (YYYY-MM-DD)
+        // Ordenação manual por data para evitar necessidade de índices compostos iniciais
         eventos.sort((a, b) => (a.data > b.data ? 1 : -1));
 
         container.innerHTML = "";
         eventos.forEach((evento) => {
-            console.log("AGENDA: Processando evento:", evento.titulo);
-            
-            // Tratamento de data
             const dataValor = evento.data || "2026-01-01";
             const partes = dataValor.split('-'); 
-            const dia = partes[2] || "00";
-            
-            // Criamos a data localmente para pegar o nome do mês
+            const dia = partes[2] || "01";
             const dataLocal = new Date(partes[0], partes[1] - 1, partes[2]);
             const mes = dataLocal.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
-            
             const corEvento = evento.cor || 'var(--cor-primaria)';
 
             container.innerHTML += `
@@ -247,12 +255,11 @@ async function carregarAgenda() {
                         </div>
                         ${evento.descricao ? `<p style="margin:8px 0 0 0; color:#888; font-size:0.8rem; line-height:1.4;">${evento.descricao}</p>` : ''}
                     </div>
-                </div>
-            `;
+                </div>`;
         });
     } catch (e) {
-        console.error("AGENDA: Erro crítico:", e);
-        container.innerHTML = `<p style="color:red; text-align:center; padding:20px;">Erro ao carregar agenda. Verifique o console do navegador.</p>`;
+        console.error("AGENDA Erro:", e);
+        container.innerHTML = `<p style="color:red; text-align:center; padding:20px;">Erro ao carregar agenda.</p>`;
     }
 }
 
@@ -261,22 +268,16 @@ async function carregarLeituraDiaria() {
     if (!idCliente) return;
     const container = document.getElementById('listaLeituraContainer');
     if(!container) return;
-
     container.innerHTML = `<p style="color:#888; text-align:center;">Buscando leituras...</p>`;
     
     try {
         const colRef = collection(db, "clientes", idCliente, "leituras");
         const snap = await getDocs(colRef);
-        
         leiturasCache = [];
-        snap.forEach(doc => {
-            leiturasCache.push({ id: doc.id, ...doc.data() });
-        });
-
+        snap.forEach(doc => { leiturasCache.push({ id: doc.id, ...doc.data() }); });
         leiturasCache.sort((a, b) => (b.dataLeitura > a.dataLeitura ? 1 : -1));
         renderizarLeituras();
     } catch (e) {
-        console.error("Erro ao carregar leituras:", e);
         container.innerHTML = `<p style="text-align:center; color:red;">Erro ao carregar dados.</p>`;
     }
 }
@@ -284,10 +285,8 @@ async function carregarLeituraDiaria() {
 function renderizarLeituras() {
     const container = document.getElementById('listaLeituraContainer');
     if(!container) return;
-
     const chaveLidos = `leituras_lidas_${idCliente}`;
     const lidasStorage = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
-    
     container.innerHTML = "";
 
     const filtradas = leiturasCache.filter(item => {
@@ -296,31 +295,22 @@ function renderizarLeituras() {
     });
 
     if (filtradas.length === 0) {
-        container.innerHTML = `<p style="text-align:center; color:#666; margin-top:30px; font-size:0.9rem;">Nenhuma leitura encontrada nesta aba.</p>`;
+        container.innerHTML = `<p style="text-align:center; color:#666; margin-top:30px;">Nenhuma leitura encontrada.</p>`;
         return;
     }
 
     filtradas.forEach((dados) => {
         const dataFormatada = dados.dataLeitura ? dados.dataLeitura.split('-').reverse().join('/') : "--/--/--";
         const estaLida = lidasStorage.includes(dados.id);
-        const textoBotao = estaLida ? 'Marcar como não lido' : 'Marcar como lido';
-        const iconeBotao = estaLida ? 'fa-undo' : 'fa-check';
-
         container.innerHTML += `
             <div class="card-leitura-diaria" style="background:#1a1a1a; padding:20px; border-radius:15px; margin-bottom:15px; border:1px solid #333;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <span style="background:var(--cor-primaria); color:#fff; padding:4px 12px; border-radius:20px; font-size:0.7rem; font-weight:bold; text-transform:uppercase;">
-                        ${dataFormatada}
-                    </span>
-                    <i class="fas fa-book-reader" style="color:var(--cor-primaria); opacity:0.5;"></i>
+                    <span style="background:var(--cor-primaria); color:#fff; padding:4px 12px; border-radius:20px; font-size:0.7rem; font-weight:bold;">${dataFormatada}</span>
                 </div>
-                <h2 style="color:#fff; margin: 0 0 10px 0; font-size:1.4rem;">${dados.referencia || 'Leitura Bíblica'}</h2>
-                <div style="color:#bbb; line-height:1.7; text-align:justify; font-size:1rem; border-top:1px solid #222; margin-top:10px; padding-top:10px; margin-bottom:15px;">
-                    ${dados.texto ? dados.texto.replace(/\n/g, '<br>') : 'Texto não disponível.'}
-                </div>
-                
-                <button onclick="window.toggleLido('${dados.id}')" style="width:100%; padding:12px; border-radius:10px; border:none; background:#222; color:white; font-weight:bold; cursor:pointer; border: 1px solid #444; display:flex; align-items:center; justify-content:center; gap:10px;">
-                    <i class="fas ${iconeBotao}"></i> ${textoBotao}
+                <h2 style="color:#fff; margin: 0 0 10px 0; font-size:1.4rem;">${dados.referencia || 'Leitura'}</h2>
+                <div style="color:#bbb; line-height:1.7; font-size:1rem; margin-bottom:15px;">${dados.texto ? dados.texto.replace(/\n/g, '<br>') : ''}</div>
+                <button onclick="window.toggleLido('${dados.id}')" style="width:100%; padding:12px; border-radius:10px; background:#222; color:white; font-weight:bold; cursor:pointer; border:1px solid #444;">
+                    <i class="fas ${estaLida ? 'fa-undo' : 'fa-check'}"></i> ${estaLida ? 'Marcar como não lido' : 'Marcar como lido'}
                 </button>
             </div>`;
     });
@@ -328,23 +318,15 @@ function renderizarLeituras() {
 
 window.filtrarLeitura = (modo) => {
     filtroLeituraAtual = modo;
-    const tabP = document.getElementById('tabPendentes');
-    const tabL = document.getElementById('tabLidas');
-    if(tabP) tabP.classList.toggle('active', modo === 'pendentes');
-    if(tabL) tabL.classList.toggle('active', modo === 'lidas');
+    document.getElementById('tabPendentes')?.classList.toggle('active', modo === 'pendentes');
+    document.getElementById('tabLidas')?.classList.toggle('active', modo === 'lidas');
     renderizarLeituras();
 };
 
 window.toggleLido = (id) => {
     const chaveLidos = `leituras_lidas_${idCliente}`;
     let lidas = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
-    
-    if (lidas.includes(id)) {
-        lidas = lidas.filter(itemId => itemId !== id);
-    } else {
-        lidas.push(id);
-    }
-    
+    lidas = lidas.includes(id) ? lidas.filter(i => i !== id) : [...lidas, id];
     localStorage.setItem(chaveLidos, JSON.stringify(lidas));
     renderizarLeituras(); 
 };
@@ -401,21 +383,17 @@ async function carregarTodosVideos() {
     const snap = await getDocs(q);
     const container = document.getElementById('gradeVideosCompleta');
     if(!container) return;
-    container.style.display = "grid";
-    container.style.gridTemplateColumns = "1fr 1fr";
-    container.style.gap = "12px";
     container.innerHTML = "";
     snap.forEach((doc) => {
         const v = doc.data();
         const videoId = extrairVideoID(v.url);
         if(videoId) {
             container.innerHTML += `
-                <div class="card-video-premium" onclick="window.abrirVideo('${videoId}')" style="min-width: unset; width: 100%; margin: 0;">
+                <div class="card-video-premium" onclick="window.abrirVideo('${videoId}')" style="width:100%; margin:0;">
                     <div class="thumb-container">
-                        <img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" style="width: 100%;">
-                        <div class="play-overlay"><i class="fas fa-play"></i></div>
+                        <img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" style="width:100%;">
                     </div>
-                    <div class="video-info" style="font-size: 0.85rem;">${v.serie || 'Conteúdo'}</div>
+                    <div class="video-info">${v.serie || 'Conteúdo'}</div>
                 </div>`;
         }
     });
@@ -428,12 +406,10 @@ window.abrirModalNota = (id = null, titulo = '', texto = '') => {
     document.getElementById('notaTexto').value = texto || '';
     document.getElementById('btnExcluirNota').style.display = id ? 'block' : 'none';
     document.getElementById('modalNota').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
 };
 
 window.fecharModalNota = () => {
     document.getElementById('modalNota').style.display = 'none';
-    document.body.style.overflow = 'auto';
 };
 
 window.salvarNota = async () => {
@@ -442,7 +418,8 @@ window.salvarNota = async () => {
     const id = document.getElementById('notaId').value;
     const titulo = document.getElementById('notaTitulo').value;
     const texto = document.getElementById('notaTexto').value;
-    if (!titulo || !texto) return alert("Preencha tudo.");
+    if (!titulo || !texto) return alert("Preencha título e texto.");
+    
     const notaData = { titulo, texto, userId: user.uid, idCliente: idCliente, dataAtualizacao: new Date() };
     try {
         if (id) { await updateDoc(doc(db, "anotacoes_membros", id), notaData); } 
@@ -453,7 +430,10 @@ window.salvarNota = async () => {
 
 window.excluirNota = async () => {
     const id = document.getElementById('notaId').value;
-    if (id && confirm("Excluir?")) { await deleteDoc(doc(db, "anotacoes_membros", id)); window.fecharModalNota(); }
+    if (id && confirm("Deseja excluir esta nota?")) { 
+        await deleteDoc(doc(db, "anotacoes_membros", id)); 
+        window.fecharModalNota(); 
+    }
 };
 
 function escutarAnotacoes() {
@@ -490,8 +470,9 @@ window.abrirSeletorLivros = () => {
 window.selecionarCapitulo = (livro) => {
     livroSelecionado = livro;
     const container = document.getElementById('containerSelecao');
-    container.innerHTML = `<div style="grid-column:1/-1; padding:10px; font-weight:bold; color:var(--cor-primaria)">${livro}: Capítulo</div>`;
-    for(let i = 1; i <= 150; i++) {
+    container.innerHTML = `<div style="grid-column:1/-1; padding:10px; font-weight:bold; color:var(--cor-primaria)">${livro}: Escolha o Capítulo</div>`;
+    // Loop de capítulos genérico (A API bible-api valida se o capítulo existe)
+    for(let i = 1; i <= 60; i++) {
         container.innerHTML += `<button onclick="window.finalizarSelecao('${livro}', ${i})" style="background:var(--cor-primaria); color:white;">${i}</button>`;
     }
 };
@@ -508,7 +489,7 @@ window.buscarBiblia = async (tipo, valorManual = null) => {
     const inputPalavra = document.getElementById('inputPalavra');
     let busca = valorManual || (inputPalavra ? inputPalavra.value : "");
     if (!busca) return;
-    resContainer.innerHTML = "<p style='text-align:center;'>Carregando...</p>";
+    resContainer.innerHTML = "<p style='text-align:center;'>Buscando palavra...</p>";
     try {
         const response = await fetch(`https://bible-api.com/${encodeURIComponent(busca)}?translation=almeida`);
         const data = await response.json();
@@ -518,10 +499,12 @@ window.buscarBiblia = async (tipo, valorManual = null) => {
             resContainer.innerHTML = data.verses.map(v => `
                 <div style="margin-bottom:15px; display:flex; gap:10px;">
                     <span style="color:var(--cor-primaria); font-weight:bold;">${v.verse}</span>
-                    <p style="margin:0; color:#fff; text-align:justify;">${v.text}</p>
+                    <p style="margin:0; color:#fff;">${v.text}</p>
                 </div>`).join('');
+        } else {
+            resContainer.innerHTML = "<p style='text-align:center;'>Referência não encontrada.</p>";
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { resContainer.innerHTML = "Erro ao buscar."; }
 };
 
 // --- NOTÍCIAS ---
@@ -537,7 +520,7 @@ async function carregarNoticiasHome() {
         const json = JSON.stringify({titulo: n.titulo, capa: n.capa, texto: n.texto}).replace(/"/g, '&quot;');
         container.innerHTML += `
             <div class="card-video-premium" style="min-width:220px;" onclick="window.abrirReflexao('${json}')">
-                <img src="${n.capa || 'https://placehold.co/600x400'}" style="height:140px; object-fit:cover;">
+                <img src="${n.capa || 'https://placehold.co/600x400'}" style="height:140px; object-fit:cover; width:100%;">
                 <div class="video-info"><strong>${n.titulo}</strong></div>
             </div>`;
     });
@@ -547,14 +530,12 @@ window.abrirReflexao = (jsonStr) => {
     const dados = JSON.parse(jsonStr);
     document.getElementById('modalImagem').src = dados.capa;
     document.getElementById('modalTitulo').innerText = dados.titulo;
-    document.getElementById('modalTexto').innerHTML = dados.texto.replace(/\n/g, "<br>");
+    document.getElementById('modalTexto').innerHTML = (dados.texto || "").replace(/\n/g, "<br>");
     document.getElementById('modalReflexao').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
 };
 
 window.fecharReflexao = () => {
     document.getElementById('modalReflexao').style.display = 'none';
-    document.body.style.overflow = 'auto';
 };
 
 // --- SISTEMA DE ORAÇÃO ---
@@ -565,76 +546,41 @@ window.enviarPedidoOracao = async () => {
     const msg = document.getElementById('msgSucessoOracao');
 
     if (!nomeInput.value || !textoInput.value) {
-        alert("Por favor, preencha seu nome e o motivo da oração.");
+        alert("Preencha seu nome e o pedido.");
         return;
     }
 
     btn.disabled = true;
-    const textoOriginal = btn.innerHTML;
-    btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Enviando...`;
-
     try {
         await addDoc(collection(db, "clientes", idCliente, "pedidos_oracao"), {
             nome: nomeInput.value,
             pedido: textoInput.value,
             userId: auth.currentUser ? auth.currentUser.uid : "anonimo",
             status: "pendente",
-            visualizado: false,
             idCliente: idCliente,
             dataCriacao: new Date()
         });
-
-        nomeInput.value = "";
-        textoInput.value = "";
-        btn.style.display = "none";
+        nomeInput.value = ""; textoInput.value = "";
         msg.style.display = "block";
-
-        setTimeout(() => {
-            msg.style.display = "none";
-            btn.style.display = "flex";
-            btn.disabled = false;
-            btn.innerHTML = textoOriginal;
-        }, 5000);
-
-    } catch (e) {
-        console.error("Erro ao enviar oração:", e);
-        alert("Erro ao enviar. Tente novamente.");
-        btn.disabled = false;
-        btn.innerHTML = textoOriginal;
-    }
+        setTimeout(() => { msg.style.display = "none"; btn.disabled = false; }, 3000);
+    } catch (e) { btn.disabled = false; }
 };
 
 function escutarMeusPedidosOracao() {
     const user = auth.currentUser;
     const container = document.getElementById('meusPedidosLista');
     if (!user || !container) return;
-
-    const q = query(
-        collection(db, "clientes", idCliente, "pedidos_oracao"),
-        where("userId", "==", user.uid),
-        orderBy("dataCriacao", "desc"),
-        limit(10)
-    );
-
+    const q = query(collection(db, "clientes", idCliente, "pedidos_oracao"), where("userId", "==", user.uid), orderBy("dataCriacao", "desc"), limit(10));
     if (unsubscribeOracoes) unsubscribeOracoes();
     unsubscribeOracoes = onSnapshot(q, (snapshot) => {
-        container.innerHTML = "";
-        if(snapshot.empty) {
-            container.innerHTML = "<p style='color:#666; font-size:0.8rem; text-align:center;'>Nenhum pedido enviado ainda.</p>";
-            return;
-        }
+        container.innerHTML = snapshot.empty ? "<p>Nenhum pedido.</p>" : "";
         snapshot.forEach((doc) => {
             const p = doc.data();
-            const statusCor = p.status === 'pendente' ? 'orange' : '#2d6a4f';
-            const statusTexto = p.status === 'pendente' ? 'Aguardando' : 'Atendido/Orado';
-
+            const cor = p.status === 'pendente' ? 'orange' : '#2d6a4f';
             container.innerHTML += `
-                <div style="background:#222; padding:12px; border-radius:10px; margin-bottom:10px; border-left:4px solid ${statusCor};">
-                    <p style="color:#fff; margin:0 0 5px 0; font-size:0.9rem;">${p.pedido}</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <small style="color:#888;">${p.dataCriacao.toDate().toLocaleDateString()}</small>
-                        <small style="color:${statusCor}; font-weight:bold;">${statusTexto}</small>
-                    </div>
+                <div style="background:#222; padding:12px; border-radius:10px; margin-bottom:10px; border-left:4px solid ${cor};">
+                    <p style="color:#fff; margin:0;">${p.pedido}</p>
+                    <small style="color:${cor}; font-weight:bold;">${p.status === 'pendente' ? 'Pendente' : 'Atendido'}</small>
                 </div>`;
         });
     });
