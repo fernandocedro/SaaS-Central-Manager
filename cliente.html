@@ -35,6 +35,11 @@
                         <i class="fas fa-book-open"></i> Leitura Bíblica
                     </a>
                 </li>
+                <li id="menuPrayers">
+                    <a href="javascript:void(0)" onclick="window.mostrarSessao('oracoes')">
+                        <i class="fas fa-hands-helping"></i> Pedidos de Oração
+                    </a>
+                </li>
                 <li id="menuPush">
                     <a href="javascript:void(0)" onclick="window.mostrarSessao('notificacoes')">
                         <i class="fas fa-bell"></i> Enviar Notificação
@@ -94,7 +99,7 @@
                     </div>
                     <div class="input-group">
                         <label>Descrição do Conteúdo</label>
-                        <textarea id="videoDesc" rows="4" placeholder="O que acontece neste vídeo?"></textarea>
+                        <input type="text" id="videoDesc" placeholder="O que acontece neste vídeo?">
                     </div>
                     <button type="submit" id="btnAcaoPrincipal" class="btn-submit">Publicar Vídeo</button>
                 </form>
@@ -155,6 +160,30 @@
                     <button type="submit" class="btn-submit">Agendar Leitura</button>
                 </form>
                 <div id="gradeLeituras" class="grid-conteudo"></div>
+            </section>
+
+            <section id="secaoOracoes" class="main-card" style="display: none;">
+                <div class="card-header gerenciar-header">
+                    <h3><i class="fas fa-hands-helping"></i> Pedidos de Oração</h3>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="inputBuscaOracao" placeholder="Buscar por nome...">
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="tabela-adm">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Nome</th>
+                                <th>Pedido</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaOracoesBody">
+                            </tbody>
+                    </table>
+                </div>
             </section>
 
             <section id="secaoNotificacoes" class="main-card" style="display: none;">
@@ -329,4 +358,4 @@
 
     <script type="module" src="cliente-app.js"></script>
 </body>
-</html>
+</html> 
