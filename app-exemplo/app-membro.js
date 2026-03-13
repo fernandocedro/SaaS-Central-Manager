@@ -151,7 +151,6 @@ async function inicializarApp() {
                 const nomeFinal = userData.nome || user.displayName || "Membro";
                 if(nomeDisplay) nomeDisplay.innerText = nomeFinal;
                 
-                // Pré-preencher campos de inscrição se existirem
                 if(document.getElementById('ins_nome')) document.getElementById('ins_nome').value = userData.nome || "";
 
                 if(userData.fotoUrl || user.photoURL) {
@@ -203,6 +202,8 @@ window.mostrarSessao = (aba) => {
         escutarMeusPedidosOracao();
     } else if (aba === 'agenda') {
         carregarAgenda();
+    } else if (aba === 'ofertas') {
+        carregarOfertas(); // <--- CORREÇÃO: Chamando a função ao clicar na aba
     }
 };
 
@@ -261,19 +262,54 @@ async function carregarAgenda() {
     }
 }
 
+// --- SISTEMA DE OFERTAS ---
+async function carregarOfertas() {
+    if (!idCliente) return;
+    const container = document.getElementById('listaOfertasContainer'); // Garanta que este ID existe no seu HTML
+    if (!container) return;
+
+    container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando ofertas...</p>`;
+
+    try {
+        const colRef = collection(db, "clientes", idCliente, "ofertas");
+        const q = query(colRef, orderBy("dataCriacao", "desc"));
+        const snap = await getDocs(q);
+
+        if (snap.empty) {
+            container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhuma oferta ou dízimo disponível.</p>`;
+            return;
+        }
+
+        container.innerHTML = "";
+        snap.forEach((doc) => {
+            const of = doc.data();
+            container.innerHTML += `
+                <div class="card-oferta" style="background:#1a1a1a; border-radius:15px; overflow:hidden; margin-bottom:15px; border:1px solid #333;">
+                    ${of.imagem ? `<img src="${of.imagem}" style="width:100%; height:160px; object-fit:cover;">` : ''}
+                    <div style="padding:15px;">
+                        <h3 style="color:#fff; margin:0 0 8px 0; font-size:1.1rem;">${of.titulo}</h3>
+                        ${of.descricao ? `<p style="color:#aaa; font-size:0.9rem; margin-bottom:12px;">${of.descricao}</p>` : ''}
+                        <a href="${of.link}" target="_blank" style="display:block; text-align:center; background:var(--cor-primaria); color:#fff; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:0.9rem;">
+                            <i class="fas fa-external-link-alt"></i> Contribuir / Acessar
+                        </a>
+                    </div>
+                </div>`;
+        });
+    } catch (e) {
+        console.error("Erro Ofertas:", e);
+        container.innerHTML = `<p style="color:red; text-align:center; padding:20px;">Erro ao carregar ofertas.</p>`;
+    }
+}
+
 // Funções de Modal de Inscrição
 window.abrirInscricao = (id, titulo, data, hora) => {
     const modal = document.getElementById('modalInscricao');
     if (!modal) return;
-    
     document.getElementById('ins_evento_id').value = id;
     document.getElementById('ins_evento_titulo').innerText = titulo;
-    
-    // Mostra data e hora no modal para conferência
     const dataFormatada = data ? data.split('-').reverse().join('/') : "";
     const infoEvento = document.getElementById('ins_evento_data_hora');
     if(infoEvento) infoEvento.innerText = `${dataFormatada} às ${hora || '--:--'}`;
-
     modal.style.display = 'flex';
 };
 
@@ -286,30 +322,18 @@ window.confirmarInscricao = async () => {
     const nome = document.getElementById('ins_nome').value;
     const sobrenome = document.getElementById('ins_sobrenome').value;
     const cpf = document.getElementById('ins_cpf').value;
-
     if (!nome || !cpf) return alert("Preencha seu Nome e CPF para continuar.");
-
     try {
-        // CORREÇÃO: Salvando com campos separados para facilitar a leitura no Admin
         await addDoc(collection(db, "clientes", idCliente, "eventos", idEv, "inscritos"), {
-            nome: nome,
-            sobrenome: sobrenome,
-            nomeCompleto: `${nome} ${sobrenome}`, // Mantemos o completo para busca rápida
-            cpf: cpf,
+            nome, sobrenome, nomeCompleto: `${nome} ${sobrenome}`, cpf,
             userId: auth.currentUser ? auth.currentUser.uid : "anonimo",
             email: auth.currentUser ? auth.currentUser.email : "",
             dataInscricao: new Date()
         });
-        
         alert("Inscrição confirmada com sucesso!");
         window.fecharInscricao();
-        
-        // Limpar campos após sucesso
         document.getElementById('ins_cpf').value = "";
-    } catch (e) {
-        console.error(e);
-        alert("Erro ao realizar inscrição.");
-    }
+    } catch (e) { alert("Erro ao realizar inscrição."); }
 };
 
 // --- LEITURA DIÁRIA ---
@@ -318,7 +342,6 @@ async function carregarLeituraDiaria() {
     const container = document.getElementById('listaLeituraContainer');
     if(!container) return;
     container.innerHTML = `<p style="color:#888; text-align:center;">Buscando leituras...</p>`;
-    
     try {
         const colRef = collection(db, "clientes", idCliente, "leituras");
         const snap = await getDocs(colRef);
@@ -326,9 +349,7 @@ async function carregarLeituraDiaria() {
         snap.forEach(doc => { leiturasCache.push({ id: doc.id, ...doc.data() }); });
         leiturasCache.sort((a, b) => (b.dataLeitura > a.dataLeitura ? 1 : -1));
         renderizarLeituras();
-    } catch (e) {
-        container.innerHTML = `<p style="text-align:center; color:red;">Erro ao carregar dados.</p>`;
-    }
+    } catch (e) { container.innerHTML = `<p style="text-align:center; color:red;">Erro ao carregar dados.</p>`; }
 }
 
 function renderizarLeituras() {
@@ -337,17 +358,14 @@ function renderizarLeituras() {
     const chaveLidos = `leituras_lidas_${idCliente}`;
     const lidasStorage = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
     container.innerHTML = "";
-
     const filtradas = leiturasCache.filter(item => {
         const estaLida = lidasStorage.includes(item.id);
         return filtroLeituraAtual === 'lidas' ? estaLida : !estaLida;
     });
-
     if (filtradas.length === 0) {
         container.innerHTML = `<p style="text-align:center; color:#666; margin-top:30px;">Nenhuma leitura encontrada.</p>`;
         return;
     }
-
     filtradas.forEach((dados) => {
         const dataFormatada = dados.dataLeitura ? dados.dataLeitura.split('-').reverse().join('/') : "--/--/--";
         const estaLida = lidasStorage.includes(dados.id);
@@ -468,7 +486,6 @@ window.salvarNota = async () => {
     const titulo = document.getElementById('notaTitulo').value;
     const texto = document.getElementById('notaTexto').value;
     if (!titulo || !texto) return alert("Preencha título e texto.");
-    
     const notaData = { titulo, texto, userId: user.uid, idCliente: idCliente, dataAtualizacao: new Date() };
     try {
         if (id) { await updateDoc(doc(db, "anotacoes_membros", id), notaData); } 
@@ -549,9 +566,7 @@ window.buscarBiblia = async (tipo, valorManual = null) => {
                     <span style="color:var(--cor-primaria); font-weight:bold;">${v.verse}</span>
                     <p style="margin:0; color:#fff;">${v.text}</p>
                 </div>`).join('');
-        } else {
-            resContainer.innerHTML = "<p style='text-align:center;'>Referência não encontrada.</p>";
-        }
+        } else { resContainer.innerHTML = "<p style='text-align:center;'>Referência não encontrada.</p>"; }
     } catch (e) { resContainer.innerHTML = "Erro ao buscar."; }
 };
 
@@ -592,12 +607,7 @@ window.enviarPedidoOracao = async () => {
     const textoInput = document.getElementById('oracaoTexto');
     const btn = document.getElementById('btnEnviarOracao');
     const msg = document.getElementById('msgSucessoOracao');
-
-    if (!nomeInput.value || !textoInput.value) {
-        alert("Preencha seu nome e o pedido.");
-        return;
-    }
-
+    if (!nomeInput.value || !textoInput.value) { alert("Preencha seu nome e o pedido."); return; }
     btn.disabled = true;
     try {
         await addDoc(collection(db, "clientes", idCliente, "pedidos_oracao"), {
