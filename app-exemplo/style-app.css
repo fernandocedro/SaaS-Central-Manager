@@ -140,7 +140,7 @@ body {
 
 /* --- 5. CARDS PREMIUM (IDÊNTICO À IMAGEM) --- */
 .card-video-premium {
-    min-width: 280px;
+    max-width: 280px;
     background: #000;
     border-radius: 15px;
     overflow: hidden;
@@ -634,6 +634,7 @@ body {
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 
         }
+
 
 
 
