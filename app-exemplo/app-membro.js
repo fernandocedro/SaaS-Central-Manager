@@ -80,10 +80,12 @@ window.mudarModoAuth = (modo) => {
 window.loginGoogle = async () => {
     try { 
         const result = await signInWithPopup(auth, googleProvider);
+        // SALVA O IDCLIENTE AUTOMATICAMENTE NO LOGIN GOOGLE
         await setDoc(doc(db, "usuarios_app", result.user.uid), {
             nome: result.user.displayName,
             email: result.user.email,
             fotoUrl: result.user.photoURL,
+            idCliente: idCliente, // Aqui o vínculo é feito
             ultimaAtividade: new Date()
         }, { merge: true });
     } catch (error) { 
@@ -104,9 +106,11 @@ document.getElementById('formAuth')?.addEventListener('submit', async (e) => {
             await signInWithEmailAndPassword(auth, email, senha);
         } else if (btnTexto === "Cadastrar agora") {
             const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+            // SALVA O IDCLIENTE NO CADASTRO POR E-MAIL TAMBÉM
             await setDoc(doc(db, "usuarios_app", userCredential.user.uid), {
                 nome: nome, 
                 email: email, 
+                idCliente: idCliente, // Vínculo garantido no cadastro manual
                 dataCriacao: new Date()
             });
         } else if (btnTexto === "Enviar Link") {
@@ -346,7 +350,6 @@ window.filtrarLeitura = (filtro) => {
     renderizarLeituras();
 };
 
-// Tornamos a função global explicitamente antes de ser usada
 window.toggleLido = (id) => {
     const chaveLidos = `leituras_lidas_${idCliente}`;
     let lidas = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
@@ -584,5 +587,3 @@ function escutarMeusPedidosOracao() {
 
 window.logoutCliente = () => { signOut(auth).then(() => { location.reload(); }); };
 window.addEventListener('DOMContentLoaded', inicializarApp);
-
-
