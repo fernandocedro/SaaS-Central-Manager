@@ -39,7 +39,8 @@ async function otimizarImagem(arquivo) {
 // --- 3. FUNÇÕES GLOBAIS (DISPONÍVEIS NO HTML) ---
 
 window.mostrarSessao = (sessao) => {
-    const secoesIds = ['secaoAdicionar', 'secaoGerenciar', 'secaoNoticias', 'secaoEventos', 'secaoOfertas', 'secaoUsuarios', 'secaoLeitura', 'secaoNotificacoes', 'secaoOracoes'];
+    // ADICIONADO: 'secaoDepartamentos' na lista
+    const secoesIds = ['secaoAdicionar', 'secaoGerenciar', 'secaoNoticias', 'secaoEventos', 'secaoOfertas', 'secaoUsuarios', 'secaoLeitura', 'secaoNotificacoes', 'secaoOracoes', 'secaoDepartamentos'];
     secoesIds.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
     
     document.querySelectorAll('.menu-items li').forEach(li => li.classList.remove('active'));
@@ -53,7 +54,8 @@ window.mostrarSessao = (sessao) => {
         'usuarios': { secao: 'secaoUsuarios', menu: 'menuUsers', acao: carregarUsuariosApp },
         'leitura': { secao: 'secaoLeitura', menu: 'menuBible', acao: carregarLeituras },
         'notificacoes': { secao: 'secaoNotificacoes', menu: 'menuPush' },
-        'oracoes': { secao: 'secaoOracoes', menu: 'menuPrayers', acao: carregarOracoes }
+        'oracoes': { secao: 'secaoOracoes', menu: 'menuPrayers', acao: carregarOracoes },
+        'departamentos': { secao: 'secaoDepartamentos', menu: 'menuDepts', acao: carregarDepartamentos } // ADICIONADO
     };
 
     const config = mapeamento[sessao];
@@ -187,7 +189,6 @@ function carregarEventos() {
     });
 }
 
-// CORRIGIDO: Agora renderiza a imagem salva no banco
 function carregarOfertas() {
     if (!idClienteDoc) return;
     const q = query(collection(db, "clientes", idClienteDoc, "ofertas"), orderBy("dataCriacao", "desc"));
@@ -197,7 +198,6 @@ function carregarOfertas() {
             container.innerHTML = "";
             snapshot.forEach(d => {
                 const of = d.data();
-                // AQUI ESTAVA O ERRO: Adicionado o campo de imagem na visualização
                 container.innerHTML += `
                 <div class="card-video" style="padding:10px;">
                     <img src="${of.imagem || 'https://placehold.co/300x150/222/white?text=Oferta'}" class="thumb-video" style="margin-bottom:10px; border-radius:8px; width:100%; height:120px; object-fit:cover;">
@@ -213,22 +213,14 @@ function carregarOfertas() {
 
 function carregarUsuariosApp() {
     if (!idClienteDoc) return;
-    
-    // Filtra apenas usuários que pertencem a esta igreja/cliente
     const q = query(collection(db, "usuarios_app"), where("idCliente", "==", idClienteDoc));
-    
     onSnapshot(q, (snap) => {
         const tbody = document.getElementById('tabelaUsuariosBody');
         if (!tbody) return;
-        
         if (snap.empty) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888; padding:20px;">
-                Nenhum usuário encontrado para este ID (${idClienteDoc}). <br>
-                Certifique-se que o usuário tem o campo 'idCliente' no Firestore.
-            </td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888; padding:20px;">Nenhum usuário encontrado.</td></tr>`;
             return;
         }
-
         tbody.innerHTML = "";
         snap.forEach(d => {
             const u = d.data();
@@ -283,6 +275,28 @@ function carregarOracoes() {
     });
 }
 
+// ADICIONADO: Função para carregar Departamentos
+function carregarDepartamentos() {
+    if (!idClienteDoc) return;
+    const q = query(collection(db, "clientes", idClienteDoc, "departamentos"), orderBy("dataCriacao", "desc"));
+    onSnapshot(q, (snap) => {
+        const container = document.getElementById('gradeDepartamentos');
+        if (!container) return;
+        container.innerHTML = "";
+        snap.forEach(d => {
+            const dept = d.data();
+            container.innerHTML += `
+            <div class="card-video" style="padding:15px; background:#1a1a1a;">
+                <h4>${dept.nome}</h4>
+                <p style="font-size:12px; color:var(--cor-primaria);">Líder: ${dept.lider || 'Não definido'}</p>
+                <div class="acoes-video">
+                    <button onclick="window.excluirDepartamento('${d.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>`;
+        });
+    });
+}
+
 // --- 5. GESTÃO DE FORMULÁRIOS (CREATE/UPDATE) ---
 
 document.getElementById('formConteudo')?.addEventListener('submit', async (e) => {
@@ -302,7 +316,6 @@ document.getElementById('formConteudo')?.addEventListener('submit', async (e) =>
             tipo: "video",
             url: document.getElementById('videoUrl').value,
             serie: document.getElementById('videoSerie').value,
-            descricao: document.getElementById('videoDesc').value,
             thumbnail: thumbUrl,
             dataCriacao: serverTimestamp()
         });
@@ -345,12 +358,8 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
             titulo: document.getElementById('eventoTitulo').value,
             data: document.getElementById('eventoData').value,
             hora: document.getElementById('eventoHora').value,
-            local: document.getElementById('eventoLocal').value,
-            descricao: document.getElementById('eventoDesc').value,
             exigeInscricao: temInsc,
             pago: ehPago,
-            linkInscricao: temInsc ? document.getElementById('eventoLinkInscricao').value : "",
-            valor: ehPago ? document.getElementById('eventoValor').value : "",
             dataCriacao: serverTimestamp()
         });
         alert("Evento criado!");
@@ -361,51 +370,45 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
     } catch (err) { alert("Erro ao salvar evento."); }
 });
 
-// CORRIGIDO: Lógica de upload de imagem para ofertas
 document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
     if(btn) { btn.disabled = true; btn.innerText = "Salvando..."; }
-
     try {
         let imgUrl = "";
         const file = document.getElementById('ofertaImg')?.files[0];
-        
-        // Verifica se há arquivo e faz upload
         if (file) {
             const opt = await otimizarImagem(file);
             const sRef = ref(storage, `clientes/${idClienteDoc}/ofertas/${Date.now()}_${file.name}`);
             const snap = await uploadBytes(sRef, opt);
             imgUrl = await getDownloadURL(snap.ref);
         }
-
         await addDoc(collection(db, "clientes", idClienteDoc, "ofertas"), {
             titulo: document.getElementById('ofertaTitulo').value,
             link: document.getElementById('ofertaLink').value,
-            imagem: imgUrl, // Aqui a URL da imagem é salva corretamente
+            imagem: imgUrl,
             dataCriacao: serverTimestamp()
         });
-        
-        alert("Oferta publicada com sucesso!");
+        alert("Oferta publicada!");
         e.target.reset();
         carregarOfertas();
-    } catch (err) { 
-        console.error(err);
-        alert("Erro ao salvar oferta."); 
-    } finally {
-        if(btn) { btn.disabled = false; btn.innerText = "Adicionar Opção"; }
-    }
+    } catch (err) { alert("Erro ao salvar oferta."); }
+    finally { if(btn) { btn.disabled = false; btn.innerText = "Adicionar Opção"; } }
 });
 
-document.getElementById('formLeitura')?.addEventListener('submit', async (e) => {
+// ADICIONADO: Evento para salvar Departamento
+document.getElementById('formDepartamento')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    await addDoc(collection(db, "clientes", idClienteDoc, "leituras"), {
-        dataLeitura: document.getElementById('leituraData').value,
-        versos: document.getElementById('leituraVersos').value,
-        texto: document.getElementById('leituraTexto').value,
-        dataCriacao: serverTimestamp()
-    });
-    e.target.reset();
+    try {
+        await addDoc(collection(db, "clientes", idClienteDoc, "departamentos"), {
+            nome: document.getElementById('deptNome').value,
+            lider: document.getElementById('deptLider').value,
+            dataCriacao: serverTimestamp()
+        });
+        alert("Departamento criado!");
+        e.target.reset();
+        carregarDepartamentos();
+    } catch (err) { alert("Erro ao criar departamento."); }
 });
 
 document.getElementById('formPush')?.addEventListener('submit', async (e) => {
@@ -428,6 +431,7 @@ window.excluirEvento = async (id) => { if (confirm("Excluir evento?")) await del
 window.excluirOferta = async (id) => { if (confirm("Remover oferta?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "ofertas", id)); };
 window.excluirLeitura = async (id) => { if (confirm("Excluir leitura?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "leituras", id)); };
 window.excluirOracao = async (id) => { if (confirm("Excluir oração?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id)); };
+window.excluirDepartamento = async (id) => { if (confirm("Excluir departamento?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "departamentos", id)); }; // ADICIONADO
 
 window.prepararEdicaoVideo = (id, serie, desc) => {
     document.getElementById('editVideoId').value = id;
@@ -483,4 +487,3 @@ onAuthStateChanged(auth, (user) => {
     if (!user) { window.location.href = "login-cliente.html"; } 
     else { buscarDadosCliente(user.uid); }
 });
-
