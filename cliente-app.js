@@ -39,7 +39,6 @@ async function otimizarImagem(arquivo) {
 // --- 3. FUNÇÕES GLOBAIS (DISPONÍVEIS NO HTML) ---
 
 window.mostrarSessao = (sessao) => {
-    // ADICIONADO: 'secaoDepartamentos' na lista
     const secoesIds = ['secaoAdicionar', 'secaoGerenciar', 'secaoNoticias', 'secaoEventos', 'secaoOfertas', 'secaoUsuarios', 'secaoLeitura', 'secaoNotificacoes', 'secaoOracoes', 'secaoDepartamentos'];
     secoesIds.forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
     
@@ -55,7 +54,7 @@ window.mostrarSessao = (sessao) => {
         'leitura': { secao: 'secaoLeitura', menu: 'menuBible', acao: carregarLeituras },
         'notificacoes': { secao: 'secaoNotificacoes', menu: 'menuPush' },
         'oracoes': { secao: 'secaoOracoes', menu: 'menuPrayers', acao: carregarOracoes },
-        'departamentos': { secao: 'secaoDepartamentos', menu: 'menuDepts', acao: carregarDepartamentos } // ADICIONADO
+        'departamentos': { secao: 'secaoDepartamentos', menu: 'menuDepts', acao: carregarDepartamentos } 
     };
 
     const config = mapeamento[sessao];
@@ -275,7 +274,7 @@ function carregarOracoes() {
     });
 }
 
-// ADICIONADO: Função para carregar Departamentos
+// ALTERADO: Função para carregar Departamentos com botão de Solicitações
 function carregarDepartamentos() {
     if (!idClienteDoc) return;
     const q = query(collection(db, "clientes", idClienteDoc, "departamentos"), orderBy("dataCriacao", "desc"));
@@ -290,12 +289,59 @@ function carregarDepartamentos() {
                 <h4>${dept.nome}</h4>
                 <p style="font-size:12px; color:var(--cor-primaria);">Líder: ${dept.lider || 'Não definido'}</p>
                 <div class="acoes-video">
+                    <button onclick="window.verSolicitacoesDept('${d.id}', '${esc(dept.nome)}')" class="btn-edit-sm" style="background:#2563eb; color:#fff; margin-right:5px;">
+                        <i class="fas fa-user-clock"></i> Solicitações
+                    </button>
                     <button onclick="window.excluirDepartamento('${d.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
                 </div>
             </div>`;
         });
     });
 }
+
+// ADICIONADO: Funções de Gestão de Membros de Departamento
+window.verSolicitacoesDept = async (deptId, nomeDept) => {
+    const modal = document.getElementById('modalVerInscritos'); 
+    const lista = document.getElementById('listaNomesInscritos');
+    const tituloModal = document.getElementById('tituloEventoInscritos');
+    if (tituloModal) tituloModal.innerText = `Solicitações: ${nomeDept}`;
+    if (lista) lista.innerHTML = "<li style='color:#fff; padding:10px;'>Carregando...</li>";
+    if (modal) modal.style.display = 'flex';
+    try {
+        const q = query(collection(db, "clientes", idClienteDoc, "departamentos", deptId, "membros"), where("status", "==", "pendente"));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+            lista.innerHTML = "<li style='padding:15px; color:#888;'>Nenhuma solicitação pendente.</li>";
+        } else {
+            lista.innerHTML = "";
+            snap.forEach(docSnap => {
+                const m = docSnap.data();
+                lista.innerHTML += `
+                    <li style="border-bottom:1px solid #333; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+                        <div><b style="color:#fff;">${m.nome}</b><br><small style="color:#888;">${m.email}</small></div>
+                        <div>
+                            <button onclick="window.decidirMembroDept('${deptId}', '${docSnap.id}', 'aprovado')" class="btn-edit-sm" style="background:#22c55e; color:#fff; margin-right:5px;"><i class="fas fa-check"></i></button>
+                            <button onclick="window.decidirMembroDept('${deptId}', '${docSnap.id}', 'recusado')" class="btn-delete-sm" style="background:#ef4444; color:#fff;"><i class="fas fa-times"></i></button>
+                        </div>
+                    </li>`;
+            });
+        }
+    } catch (err) { lista.innerHTML = "Erro ao carregar."; }
+};
+
+window.decidirMembroDept = async (deptId, membroDocId, decisao) => {
+    try {
+        const refMembro = doc(db, "clientes", idClienteDoc, "departamentos", deptId, "membros", membroDocId);
+        if (decisao === 'aprovado') {
+            await updateDoc(refMembro, { status: "aprovado" });
+            alert("Membro aprovado!");
+        } else {
+            await deleteDoc(refMembro);
+            alert("Solicitação recusada.");
+        }
+        window.fecharModalInscritos();
+    } catch (err) { alert("Erro ao processar."); }
+};
 
 // --- 5. GESTÃO DE FORMULÁRIOS (CREATE/UPDATE) ---
 
@@ -396,7 +442,6 @@ document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     finally { if(btn) { btn.disabled = false; btn.innerText = "Adicionar Opção"; } }
 });
 
-// ADICIONADO: Evento para salvar Departamento
 document.getElementById('formDepartamento')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
@@ -431,7 +476,7 @@ window.excluirEvento = async (id) => { if (confirm("Excluir evento?")) await del
 window.excluirOferta = async (id) => { if (confirm("Remover oferta?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "ofertas", id)); };
 window.excluirLeitura = async (id) => { if (confirm("Excluir leitura?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "leituras", id)); };
 window.excluirOracao = async (id) => { if (confirm("Excluir oração?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id)); };
-window.excluirDepartamento = async (id) => { if (confirm("Excluir departamento?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "departamentos", id)); }; // ADICIONADO
+window.excluirDepartamento = async (id) => { if (confirm("Excluir departamento?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "departamentos", id)); }; 
 
 window.prepararEdicaoVideo = (id, serie, desc) => {
     document.getElementById('editVideoId').value = id;
