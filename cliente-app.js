@@ -274,7 +274,6 @@ function carregarOracoes() {
     });
 }
 
-// ALTERADO: Função para carregar Departamentos com botão de Solicitações
 function carregarDepartamentos() {
     if (!idClienteDoc) return;
     const q = query(collection(db, "clientes", idClienteDoc, "departamentos"), orderBy("dataCriacao", "desc"));
@@ -299,7 +298,6 @@ function carregarDepartamentos() {
     });
 }
 
-// ADICIONADO: Funções de Gestão de Membros de Departamento
 window.verSolicitacoesDept = async (deptId, nomeDept) => {
     const modal = document.getElementById('modalVerInscritos'); 
     const lista = document.getElementById('listaNomesInscritos');
@@ -344,6 +342,34 @@ window.decidirMembroDept = async (deptId, membroDocId, decisao) => {
 };
 
 // --- 5. GESTÃO DE FORMULÁRIOS (CREATE/UPDATE) ---
+
+// --- ADICIONADO: FUNÇÃO SALVAR LEITURA ---
+window.salvarLeitura = async () => {
+    if (!idClienteDoc) return;
+    const data = document.getElementById('leituraData').value;
+    const versos = document.getElementById('leituraVersos').value;
+    const texto = document.getElementById('leituraTexto').value;
+
+    if (!data || !versos) {
+        alert("Preencha a data e os versículos.");
+        return;
+    }
+
+    try {
+        await addDoc(collection(db, "clientes", idClienteDoc, "leituras"), {
+            dataLeitura: data,
+            versos: versos,
+            texto: texto,
+            dataCriacao: serverTimestamp()
+        });
+        alert("Leitura cadastrada!");
+        document.getElementById('formLeitura').reset();
+        carregarLeituras();
+    } catch (err) {
+        console.error(err);
+        alert("Erro ao salvar leitura.");
+    }
+};
 
 document.getElementById('formConteudo')?.addEventListener('submit', async (e) => {
     e.preventDefault();
