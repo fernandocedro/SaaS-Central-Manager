@@ -705,8 +705,55 @@ body {
         }
 
 
+/* Estilização do Perfil */
+.perfil-container-premium {
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid #333;
+}
+.grupo-input {
+    margin-bottom: 15px;
+}
+.grupo-input label {
+    display: block;
+    color: var(--cor-primaria);
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.grupo-input input, .grupo-input select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    background: #000;
+    border: 1px solid #333;
+    color: #fff;
+    outline: none;
+}
+.grid-perfil {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.btn-excluir-conta {
+    width: 100%;
+    background: transparent;
+    color: #ff4444;
+    border: 1px solid #ff4444;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 15px;
+    cursor: pointer;
+    font-weight: bold;
+}
 
-
+/* Forçar Grade de Vídeos em 2 colunas */
+#gradeVideosCompleta {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 12px !important;
+}
 
 
 
