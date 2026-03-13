@@ -327,23 +327,22 @@ async function carregarLeituraDiaria() {
     } catch (e) { container.innerHTML = `<p style="color:red;">Erro ao carregar leituras.</p>`; }
 }
 
-// ADICIONE ESTA FUNÇÃO AQUI ABAIXO:
 window.filtrarLeitura = (filtro) => {
-    filtroLeituraAtual = filtro; // 'pendentes' ou 'lidas'
+    filtroLeituraAtual = filtro; 
     
-    // Atualiza o visual dos botões (tabs)
     const btnPendentes = document.getElementById('tabPendentes');
     const btnLidas = document.getElementById('tabLidas');
     
-    if (filtro === 'pendentes') {
-        btnPendentes.classList.add('active');
-        btnLidas.classList.remove('active');
-    } else {
-        btnLidas.classList.add('active');
-        btnPendentes.classList.remove('active');
+    if (btnPendentes && btnLidas) {
+        if (filtro === 'pendentes') {
+            btnPendentes.classList.add('active');
+            btnLidas.classList.remove('active');
+        } else {
+            btnLidas.classList.add('active');
+            btnPendentes.classList.remove('active');
+        }
     }
     
-    // Re-renderiza a lista com o novo filtro
     renderizarLeituras();
 };
 
@@ -376,6 +375,14 @@ function renderizarLeituras() {
             </div>`;
     });
 }
+
+window.toggleLido = (id) => {
+    const chaveLidos = `leituras_lidas_${idCliente}`;
+    let lidas = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
+    lidas = lidas.includes(id) ? lidas.filter(i => i !== id) : [...lidas, id];
+    localStorage.setItem(chaveLidos, JSON.stringify(lidas));
+    renderizarLeituras(); 
+};
 
 // --- VÍDEOS ---
 function extrairVideoID(url) {
@@ -522,7 +529,6 @@ async function carregarNoticiasHome() {
     container.innerHTML = "";
     snap.forEach((doc) => {
         const n = doc.data();
-        // AQUI: Usando a classe 'card-reflexao-premium' para as duas colunas
         container.innerHTML += `
             <div class="card-reflexao-premium" onclick="window.abrirReflexao('${JSON.stringify(n).replace(/"/g, '&quot;')}')">
                 <img src="${n.capa}">
@@ -571,4 +577,3 @@ function escutarMeusPedidosOracao() {
 
 window.logoutCliente = () => { signOut(auth).then(() => { location.reload(); }); };
 window.addEventListener('DOMContentLoaded', inicializarApp);
-
