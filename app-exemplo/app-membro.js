@@ -218,7 +218,7 @@ window.mostrarSessao = (aba) => {
     }
 };
 
-// --- FUNÇÃO DE OFERTAS (AJUSTADA PARA IMAGEM E LINK DA ADM) ---
+// --- FUNÇÃO DE OFERTAS ---
 window.carregarOfertas = async () => {
     const container = document.getElementById('listaOfertasContainer');
     if (!container || !idCliente) return;
@@ -237,8 +237,6 @@ window.carregarOfertas = async () => {
         container.innerHTML = "";
         snap.forEach((docSnap) => {
             const oferta = docSnap.data();
-            
-            // Renderiza o card seguindo o estilo visual da sua ADM
             container.innerHTML += `
                 <div onclick="window.open('${oferta.link}', '_blank')" class="card-oferta-membro" style="background: #1a1a1a; border-radius: 15px; overflow: hidden; border: 1px solid #333; margin-bottom: 20px; cursor: pointer; transition: 0.3s;">
                     <div style="width: 100%; height: 180px; position: relative; background: #222;">
@@ -258,12 +256,11 @@ window.carregarOfertas = async () => {
             `;
         });
     } catch (error) {
-        console.error("Erro ao carregar ofertas:", error);
         container.innerHTML = `<p style="color:red; text-align:center;">Erro ao conectar com o servidor.</p>`;
     }
 };
 
-// --- RESTANTE DO CÓDIGO (DEPARTAMENTOS, AGENDA, ETC) ---
+// --- RESTANTE DO CÓDIGO ---
 async function carregarDepartamentos() {
     if (!idCliente) return;
     const container = document.getElementById('listaDepartamentosContainer');
@@ -390,11 +387,23 @@ function renderizarLeituras() {
     if(!container) return;
     const lidasStorage = JSON.parse(localStorage.getItem(`leituras_lidas_${idCliente}`) || "[]");
     container.innerHTML = "";
-    leiturasCache.filter(item => (filtroLeituraAtual === 'lidas' ? lidasStorage.includes(item.id) : !lidasStorage.includes(item.id))).forEach(dados => {
+    
+    const filtradas = leiturasCache.filter(item => (filtroLeituraAtual === 'lidas' ? lidasStorage.includes(item.id) : !lidasStorage.includes(item.id)));
+    
+    if (filtradas.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:#888; padding:20px;">Nenhuma leitura nesta categoria.</p>`;
+        return;
+    }
+
+    filtradas.forEach(dados => {
+        // Correção aqui: Verifica múltiplos campos para evitar "undefined" no título
+        const tituloLeitura = dados.referencia || dados.versos || dados.titulo || "Leitura";
+        const textoLeitura = dados.texto || dados.conteudo || "";
+
         container.innerHTML += `
             <div class="card-leitura-diaria" style="background:#1a1a1a; padding:20px; border-radius:15px; margin-bottom:15px; border:1px solid #333;">
-                <h2 style="color:#fff; margin:0 0 10px 0;">${dados.referencia || dados.versos}</h2>
-                <div style="color:#bbb; margin-bottom:15px;">${(dados.texto || "").replace(/\n/g, '<br>')}</div>
+                <h2 style="color:#fff; margin:0 0 10px 0;">${tituloLeitura}</h2>
+                <div style="color:#bbb; margin-bottom:15px;">${textoLeitura.replace(/\n/g, '<br>')}</div>
                 <button onclick="window.toggleLido('${dados.id}')" style="width:100%; padding:12px; background:#222; color:white; border-radius:10px; border:1px solid #444; cursor:pointer;">
                     ${lidasStorage.includes(dados.id) ? 'Desmarcar' : 'Marcar como lido'}
                 </button>
