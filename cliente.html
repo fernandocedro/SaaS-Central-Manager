@@ -272,21 +272,22 @@
                 <div id="gradeOfertas" class="grid-conteudo" style="margin-top: 20px;"></div>
             </section>
 
-            <section id="secaoUsuarios" class="main-card" style="display: none;">
-                <div class="card-header">
-                    <h3><i class="fas fa-users"></i> Membros Cadastrados</h3>
+            <section id="secaoUsuarios" style="display:none;">
+                <div class="header-content">
+                    <h2>Membros do Aplicativo</h2>
+                    <p>Gerencie as pessoas que criaram conta no seu app.</p>
                 </div>
-                <div class="table-container">
-                    <table class="tabela-adm">
+                <div class="card-painel">
+                    <table style="width:100%; border-collapse: collapse; color: white;">
                         <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>E-mail</th>
-                                <th>Cadastro</th>
-                                <th>Ações</th>
+                            <tr style="border-bottom: 2px solid #333; text-align: left;">
+                                <th style="padding:15px;">Nome</th>
+                                <th style="padding:15px;">E-mail</th>
+                                <th style="padding:15px;">Ações</th>
                             </tr>
                         </thead>
-                        <tbody id="tabelaUsuariosBody"></tbody>
+                        <tbody id="tabelaUsuariosBody">
+                            </tbody>
                     </table>
                 </div>
             </section>
@@ -345,4 +346,5 @@
     <script type="module" src="cliente-app.js"></script>
 </body>
 </html>
+
 
