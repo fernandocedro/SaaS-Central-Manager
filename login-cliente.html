@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Login Administrativo</title>
+    <link rel="stylesheet" href="cliente.css">
+    <style>
+        .login-container {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0f172a;
+        }
+        .login-box {
+            background: #1e293b;
+            padding: 40px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .login-box h2 { text-align: center; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <h2>Painel do Cliente</h2>
+            <form id="formLoginCliente">
+                <div class="input-group">
+                    <label>E-mail Administrativo</label>
+                    <input type="email" id="emailLogin" required placeholder="seu@email.com">
+                </div>
+                <div class="input-group">
+                    <label>Senha</label>
+                    <input type="password" id="senhaLogin" required placeholder="******">
+                </div>
+                <button type="submit" class="btn-submit">Entrar no Painel</button>
+            </form>
+            <p id="msgErro" style="color: #ff4444; margin-top: 15px; display: none;"></p>
+        </div>
+    </div>
+
+    
+    <script type="module" src="login-cliente.js"></script>
+</body>
+</html>

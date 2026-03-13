@@ -1,0 +1,331 @@
+:root {
+    --cor-primaria: #2563eb;
+    --cor-secundaria: #1e293b;
+    --bg-dark: #121212;
+    --bg-card: #1e1e1e;
+    --text-white: #ffffff;
+}
+
+/* 1. CORREÇÃO DE SCROLL (Remove a barra dupla) */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* Trava o scroll no corpo principal */
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.wrapper { 
+    display: flex; 
+    height: 100vh; 
+    width: 100vw;
+}
+
+/* Sidebar */
+.sidebar-cliente {
+    width: 260px;
+    min-width: 260px;
+    background-color: #000;
+    border-right: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* 2. CONTEÚDO COM SCROLL ÚNICO */
+.content { 
+    flex-grow: 1; 
+    padding: 40px; 
+    overflow-y: auto; /* Só aqui terá rolagem */
+    height: 100vh;
+    box-sizing: border-box;
+}
+
+/* 3. AJUSTE DA BUSCA E CABEÇALHO */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; /* Evita que a busca saia da tela em monitores menores */
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.search-box {
+    position: relative;
+    width: 300px; /* Largura fixa para a busca */
+    max-width: 100%;
+}
+
+.search-box i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 10px 10px 10px 35px !important; /* Prioriza o padding interno */
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #fff;
+    box-sizing: border-box; /* Garante que o padding não aumente o tamanho */
+}
+
+/* 4. AJUSTE DE LARGURA DOS CARDS */
+.main-card {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 1100px; /* Aumentado para caber a gestão e a busca lado a lado */
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Grid de Vídeos */
+.grid-conteudo {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+    gap: 20px;
+    padding: 20px 0;
+}
+
+/* Sidebar Header e Menu */
+.sidebar-header {
+    padding: 15px;
+    text-align: center;
+}
+
+.sidebar-header img {
+    max-width: 120px; /* Define um tamanho máximo fixo */
+    max-height: 120px; /* Define uma altura máxima fixa */
+    width: auto;
+    height: auto;
+    border-radius: 12px; /* Mantém as bordas arredondadas se desejar */
+    object-fit: cover;
+    margin-bottom: 10px; 
+}
+
+.menu-items {
+    list-style: none;
+    padding: 0;
+    flex-grow: 1;
+}
+
+.menu-items li a {
+    display: flex;
+    align-items: center;
+    padding: 15px 25px;
+    color: #bbb;
+    text-decoration: none;
+    transition: 0.3s;
+    font-size: 14px;
+}
+
+.menu-items li.active {
+    background: rgba(255,255,255,0.05);
+    border-left: 4px solid var(--cor-primaria);
+}
+
+.menu-items li.active a {
+    color: #fff;
+}
+
+.menu-items li a i {
+    margin-right: 15px;
+    font-size: 18px; color:
+    var(--cor-primaria);
+}
+
+.menu-items li a:hover {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+/* Formulários */
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #888;
+}
+
+.input-group input, .input-group textarea {
+    width: 100%;
+    padding: 12px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: #fff;
+    box-sizing: border-box;
+}
+
+.btn-submit {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--cor-primaria);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.btn-submit:hover {
+    opacity: 0.9; 
+}
+
+/* Botões Sidebar Footer */
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid #333;
+    display: flex; 
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-perfil, .btn-sair {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+.btn-perfil {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 1px solid #444; 
+}
+
+.btn-perfil i {
+    color: var(--cor-primaria);
+}
+
+.btn-perfil:hover {
+    background: var(--cor-primaria);
+}
+
+.btn-sair {
+    background: transparent;
+    color: #ef4444; 
+}
+
+.btn-sair:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Modais */
+.modal-cliente-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 9999;
+}
+.modal-cliente-content {
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    border: 1px solid #334155;
+}
+
+/* Cards de Vídeo Individual */
+.card-video {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.thumb-video {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+}
+
+.info-video {
+    padding: 15px;
+    flex-grow: 1; 
+}
+
+.badge-serie {
+    background: var(--cor-primaria);
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: bold;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+.acoes-video { 
+    display: flex; 
+    gap: 10px; 
+    padding: 15px; 
+    padding-top: 0; 
+}
+
+.btn-edit-sm { 
+    background: #f59e0b; 
+    flex: 1; padding: 8px; 
+    border-radius: 6px; 
+    border:none; 
+    color:white; 
+    cursor:pointer; 
+    font-weight:bold;
+}
+
+.btn-delete-sm { 
+    background: #ef4444;
+    flex: 1; 
+    padding: 8px; 
+    border-radius: 6px; 
+    border:none; 
+    color:white; 
+    cursor:pointer; 
+    font-weight:bold;
+}
+
+.tabela-adm {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: rgba(255,255,255,0.02);
+}
+
+.tabela-adm th, .tabela-adm td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #333;
+}
+
+.tabela-adm th {
+    color: var(--cor-primaria);
+    text-transform: uppercase;
+    font-size: 12px;
+}
+
+.tabela-adm tr:hover {
+    background: rgba(255,255,255,0.05);
+}

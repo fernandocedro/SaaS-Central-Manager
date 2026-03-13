@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Administrador | Cliente</title>
+    <link rel="stylesheet" href="cliente.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="dark-theme">
+    <div class="wrapper">
+        <nav id="sidebar" class="sidebar-cliente">
+            <div class="sidebar-header">
+                <img id="logoClienteApp" src="https://via.placeholder.com/150" alt="Logo">
+            </div>
+
+            <ul class="menu-items">
+                <li id="menuAdd" class="active">
+                    <a href="javascript:void(0)" onclick="window.mostrarSessao('add')">
+                        <i class="fas fa-plus-circle"></i> Adicionar Vídeos
+                    </a>
+                </li>
+                <li id="menuList">
+                    <a href="javascript:void(0)" onclick="window.mostrarSessao('list')">
+                        <i class="fas fa-list"></i> Gerenciar Vídeos
+                    </a>
+                </li>
+                <li id="menuNews">
+                    <a href="javascript:void(0)" onclick="window.mostrarSessao('noticias')">
+                        <i class="fas fa-newspaper"></i> Notícias
+                    </a>
+                </li>
+                <li id="menuBible">
+                    <a href="javascript:void(0)" onclick="window.mostrarSessao('leitura')">
+                        <i class="fas fa-book-open"></i> Leitura Bíblica
+                    </a>
+                </li>
+                <li id="menuPush">
+                    <a href="javascript:void(0)" onclick="window.mostrarSessao('notificacoes')">
+                        <i class="fas fa-bell"></i> Enviar Notificação
+                    </a>
+                </li>
+                <li id="menuEvents">
+                    <a href="javascript:void(0)" onclick="window.mostrarSessao('eventos')">
+                        <i class="fas fa-calendar-alt"></i> Gerenciar Eventos
+                    </a>
+                </li>
+                <li id="menuOffers">
+                    <a href="javascript:void(0)" onclick="window.mostrarSessao('ofertas')">
+                        <i class="fas fa-hand-holding-heart"></i> Gerenciar Ofertas
+                    </a>
+                </li>
+                <li id="menuUsers">
+                    <a href="javascript:void(0)" onclick="window.mostrarSessao('usuarios')">
+                        <i class="fas fa-users"></i> Gerenciar Usuários
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <button onclick="window.abrirModalSenha()" class="btn-perfil">
+                    <i class="fas fa-user-cog"></i> Minha Conta
+                </button>
+                <button onclick="window.logoutCliente()" class="btn-sair">
+                    <i class="fas fa-sign-out-alt"></i> Sair
+                </button>
+            </div>
+        </nav>
+
+        <main class="content">
+            <header class="top-header">
+                <div>
+                    <h2 id="tituloPainel">Dashboard do Administrador</h2>
+                    <p id="nomeOrgDisplay" style="color: var(--cor-primaria); font-weight: bold;">Carregando...</p>
+                </div>
+            </header>
+
+            <section id="secaoAdicionar" class="main-card">
+                <div class="card-header">
+                    <h3><i class="fas fa-plus-circle"></i> Adicionar Novo Vídeo</h3>
+                </div>
+                <form id="formConteudo">
+                    <div class="input-group">
+                        <label>URL do Vídeo (YouTube/Vimeo)</label>
+                        <input type="text" id="videoUrl" placeholder="https://youtube.com/watch?v=..." required>
+                    </div>
+                    <div class="input-group">
+                        <label>Série ou Categoria</label>
+                        <input type="text" id="videoSerie" placeholder="Ex: Série sobre Oração" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Imagem de Miniatura (Thumbnail)</label>
+                        <input type="file" id="videoThumb" class="custom-file-input" accept="image/*">
+                    </div>
+                    <div class="input-group">
+                        <label>Descrição do Conteúdo</label>
+                        <textarea id="videoDesc" rows="4" placeholder="O que acontece neste vídeo?"></textarea>
+                    </div>
+                    <button type="submit" id="btnAcaoPrincipal" class="btn-submit">Publicar Vídeo</button>
+                </form>
+            </section>
+
+            <section id="secaoGerenciar" class="main-card" style="display: none;">
+                <div class="card-header gerenciar-header">
+                    <h3><i class="fas fa-list"></i> Gerenciar Vídeos</h3>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="inputBusca" placeholder="Buscar por título ou série...">
+                    </div>
+                </div>
+                <div id="gradeVideos" class="grid-conteudo"></div>
+            </section>
+
+            <section id="secaoNoticias" class="main-card" style="display: none;">
+                <div class="card-header gerenciar-header">
+                    <h3><i class="fas fa-newspaper"></i> Gerenciar Notícias</h3>
+                </div>
+                <form id="formNoticia" style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 30px;">
+                    <div class="input-group">
+                        <label>Título da Notícia</label>
+                        <input type="text" id="noticiaTitulo" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Imagem de Capa</label>
+                        <input type="file" id="noticiaImg" class="custom-file-input" accept="image/*" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Conteúdo da Notícia</label>
+                        <textarea id="noticiaTexto" rows="8" required></textarea>
+                    </div>
+                    <button type="submit" id="btnSalvarNoticia" class="btn-submit">Publicar Notícia</button>
+                </form>
+                <div id="gradeNoticias" class="grid-conteudo"></div>
+            </section>
+
+            <section id="secaoLeitura" class="main-card" style="display: none;">
+                <div class="card-header gerenciar-header">
+                    <h3><i class="fas fa-book-open"></i> Plano de Leitura Bíblica</h3>
+                </div>
+                <form id="formLeitura" style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 30px;">
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
+                        <div class="input-group">
+                            <label>Data da Leitura</label>
+                            <input type="date" id="leituraData" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Versículos (Ex: Salmos 23:1-6)</label>
+                            <input type="text" id="leituraVersos" placeholder="Ex: João 3:16-21" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Texto Complementar / Reflexão</label>
+                        <textarea id="leituraTexto" rows="5" placeholder="Escreva uma breve reflexão ou o texto bíblico completo..."></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit">Agendar Leitura</button>
+                </form>
+                <div id="gradeLeituras" class="grid-conteudo"></div>
+            </section>
+
+            <section id="secaoNotificacoes" class="main-card" style="display: none;">
+                <div class="card-header">
+                    <h3><i class="fas fa-bell"></i> Enviar Notificação Instantânea</h3>
+                </div>
+                <div class="info-alerta" style="background: rgba(52, 152, 219, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+                    <p><i class="fas fa-info-circle"></i> Isso enviará uma mensagem para todos os usuários que possuem o aplicativo instalado.</p>
+                </div>
+                <form id="formPush">
+                    <div class="input-group">
+                        <label>Título do Alerta</label>
+                        <input type="text" id="pushTitulo" placeholder="Ex: Culto começando!" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Mensagem Curta</label>
+                        <textarea id="pushMensagem" rows="3" maxlength="150" placeholder="Ex: Venha participar conosco, o louvor já iniciou..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit" style="background: #27ae60;">
+                        <i class="fas fa-paper-plane"></i> Disparar Notificação
+                    </button>
+                </form>
+            </section>
+
+            <section id="secaoEventos" class="main-card" style="display: none;">
+                <div class="card-header gerenciar-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Gerenciar Eventos</h3>
+                </div>
+                <form id="formEvento" style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 30px;">
+                    <div class="input-group">
+                        <label>Título do Evento</label>
+                        <input type="text" id="eventoTitulo" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Banner do Evento</label>
+                        <input type="file" id="eventoImg" accept="image/*" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Descrição</label>
+                        <textarea id="eventoDesc" rows="4" required></textarea>
+                    </div>
+                    <div class="input-group check-group">
+                        <input type="checkbox" id="checkInscricao" onchange="window.toggleInscricao()">
+                        <label for="checkInscricao">Este evento exige inscrição?</label>
+                    </div>
+                    <button type="submit" id="btnSalvarEvento" class="btn-submit">Publicar Evento</button>
+                </form>
+                <div id="gradeEventos" class="grid-conteudo"></div>
+            </section>
+
+            <section id="secaoOfertas" class="main-card" style="display: none;">
+                <div class="card-header gerenciar-header">
+                    <h3><i class="fas fa-hand-holding-heart"></i> Ofertas e Dízimos</h3>
+                </div>
+                <form id="formOferta">
+                    <div class="input-group">
+                        <label>Título</label>
+                        <input type="text" id="ofertaTitulo" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Link de Pagamento</label>
+                        <input type="url" id="ofertaLink" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Cadastrar Opção</button>
+                </form>
+                <div id="gradeOfertas" class="grid-conteudo"></div>
+            </section>
+
+            <section id="secaoUsuarios" class="main-card" style="display: none;">
+                <div class="card-header">
+                    <h3><i class="fas fa-users"></i> Usuários Cadastrados</h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="tabela-adm">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>Data Cadastro</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaUsuariosBody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="modalGerenciarUsuario" class="modal-cliente-overlay" style="display: none;">
+        <div class="modal-cliente-content">
+            <h3>Gerenciar Usuário</h3>
+            <div id="infoUserBox" style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <p><strong>Nome:</strong> <span id="editUserNome">---</span></p>
+                <p><strong>E-mail:</strong> <span id="editUserEmail">---</span></p>
+            </div>
+            <input type="hidden" id="editUserId">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button onclick="window.resetarSenhaUsuario()" class="btn-submit" style="background: #f59e0b;">
+                    <i class="fas fa-key"></i> Enviar Reset de Senha
+                </button>
+                <button onclick="window.excluirUsuarioApp()" class="btn-delete-sm" style="padding: 15px;">
+                    <i class="fas fa-trash"></i> Excluir Usuário
+                </button>
+                <button onclick="document.getElementById('modalGerenciarUsuario').style.display='none'" class="btn-perfil">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEditarVideo" class="modal-cliente-overlay" style="display: none;">
+        <div class="modal-cliente-content">
+            <h3>Editar Conteúdo</h3>
+            <form id="formEditarVideo">
+                <input type="hidden" id="editVideoId">
+                <div class="input-group">
+                    <label>Título / Série</label>
+                    <input type="text" id="editVideoSerie" required>
+                </div>
+                <div class="input-group">
+                    <label>Descrição</label>
+                    <textarea id="editVideoDesc" rows="4"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancelar" onclick="window.fecharModalEdicao()">Cancelar</button>
+                    <button type="submit" class="btn-submit">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalInscritos" class="modal-cliente-overlay" style="display: none;">
+        <div class="modal-cliente-content" style="max-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3><i class="fas fa-users"></i> Lista de Inscritos</h3>
+                <button onclick="document.getElementById('modalInscritos').style.display='none'" class="btn-perfil" style="padding: 5px 15px;">&times;</button>
+            </div>
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table class="tabela-adm">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaInscritosBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEditarLeitura" class="modal-cliente-overlay" style="display: none;">
+        <div class="modal-cliente-content">
+            <h3>Editar Plano de Leitura</h3>
+            <form id="formEditarLeitura">
+                <input type="hidden" id="editLeituraId">
+                <div class="input-group">
+                    <label>Versículos</label>
+                    <input type="text" id="editLeituraVersos" required>
+                </div>
+                <div class="input-group">
+                    <label>Texto/Reflexão</label>
+                    <textarea id="editLeituraTexto" rows="6"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancelar" onclick="document.getElementById('modalEditarLeitura').style.display='none'">Cancelar</button>
+                    <button type="submit" class="btn-submit">Atualizar Leitura</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="cliente-app.js"></script>
+</body>
+</html>

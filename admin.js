@@ -31,3 +31,4 @@ document.getElementById('formNovoCliente').addEventListener('submit', function(e
     
     fecharModal();
 });
+

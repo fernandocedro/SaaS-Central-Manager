@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Super Admin SaaS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-container i.logo-icon {
+            font-size: 40px;
+            color: #2563eb;
+            margin-bottom: 16px;
+        }
+        .login-container h2 {
+            color: #1e293b;
+            margin: 0 0 8px 0;
+        }
+        .login-container p {
+            color: #64748b;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        .form-group {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #334155;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .form-group input:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+        .btn-login {
+            width: 100%;
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        .btn-login:hover {
+            background: #1d4ed8;
+        }
+        .btn-login:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+        }
+        .error-message {
+            color: #ef4444;
+            background: #fef2f2;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            display: none; /* Escondido por padrão */
+            font-size: 14px;
+            border: 1px solid #fee2e2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <i class="fas fa-user-shield logo-icon"></i>
+        
+        <h2>Painel Central</h2>
+        <p>Identifique-se para acessar a gestão</p>
+
+        <div id="errorMessage" class="error-message">
+            E-mail ou senha incorretos. Verifique e tente novamente.
+        </div>
+
+        <form id="formLogin">
+            <div class="form-group">
+                <label for="email">E-mail do Administrador</label>
+                <input type="email" id="email" placeholder="exemplo@dominio.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Senha de Acesso</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn-login" id="btnLogin">
+                Acessar Painel
+            </button>
+        </form>
+    </div>
+
+    <script type="module" src="login.js"></script>
+
+</body>
+</html>
