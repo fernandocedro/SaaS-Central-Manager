@@ -209,30 +209,43 @@
             </section>
 
             <section id="secaoEventos" class="main-card" style="display: none;">
-                <div class="card-header gerenciar-header">
-                    <h3><i class="fas fa-calendar-alt"></i> Gerenciar Eventos</h3>
-                </div>
-                <form id="formEvento" style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 30px;">
-                    <div class="input-group">
-                        <label>Título do Evento</label>
-                        <input type="text" id="eventoTitulo" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Banner do Evento</label>
-                        <input type="file" id="eventoImg" accept="image/*" required>
-                    </div>
-                    <div class="input-group">
-                        <label>Descrição</label>
-                        <textarea id="eventoDesc" rows="4" required></textarea>
-                    </div>
-                    <div class="input-group check-group">
-                        <input type="checkbox" id="checkInscricao" onchange="window.toggleInscricao()">
-                        <label for="checkInscricao">Este evento exige inscrição?</label>
-                    </div>
-                    <button type="submit" id="btnSalvarEvento" class="btn-submit">Publicar Evento</button>
-                </form>
-                <div id="gradeEventos" class="grid-conteudo"></div>
-            </section>
+    <div class="card-header gerenciar-header">
+        <h3><i class="fas fa-calendar-alt"></i> Gerenciar Agenda de Eventos</h3>
+    </div>
+    
+    <form id="formEvento" style="margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 30px;">
+        <div class="input-group">
+            <label>Título do Evento</label>
+            <input type="text" id="eventoTitulo" placeholder="Ex: Culto de Celebração" required>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="input-group">
+                <label>Data</label>
+                <input type="date" id="eventoData" required>
+            </div>
+            <div class="input-group">
+                <label>Horário</label>
+                <input type="time" id="eventoHora" required>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Local</label>
+            <input type="text" id="eventoLocal" placeholder="Ex: Templo Principal" required>
+        </div>
+
+        <div class="input-group">
+            <label>Descrição Curta</label>
+            <textarea id="eventoDesc" rows="3" required></textarea>
+        </div>
+
+        <button type="submit" id="btnSalvarEvento" class="btn-submit">Publicar na Agenda</button>
+    </form>
+
+    <div id="listaEventos" class="grid-conteudo">
+        </div>
+</section>
 
             <section id="secaoOfertas" class="main-card" style="display: none;">
                 <div class="card-header gerenciar-header">
@@ -358,4 +371,5 @@
 
     <script type="module" src="cliente-app.js"></script>
 </body>
+
 </html> 
