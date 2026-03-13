@@ -196,7 +196,9 @@ function carregarOfertas() {
             container.innerHTML = "";
             snapshot.forEach(d => {
                 const of = d.data();
-                container.innerHTML += `<div class="card-video" style="padding:10px;">
+                container.innerHTML += `
+                <div class="card-video" style="padding:10px;">
+                    <img src="${of.imagem || 'https://placehold.co/300x150/222/white?text=Oferta'}" class="thumb-video" style="margin-bottom:10px;">
                     <h4>${of.titulo}</h4>
                     <button onclick="window.excluirOferta('${d.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
                 </div>`;
@@ -340,12 +342,25 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
 
 document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    await addDoc(collection(db, "clientes", idClienteDoc, "ofertas"), {
-        titulo: document.getElementById('ofertaTitulo').value,
-        link: document.getElementById('ofertaLink').value,
-        dataCriacao: serverTimestamp()
-    });
-    e.target.reset();
+    try {
+        let imgUrl = "";
+        const file = document.getElementById('ofertaImg')?.files[0];
+        if (file) {
+            const opt = await otimizarImagem(file);
+            const sRef = ref(storage, `clientes/${idClienteDoc}/ofertas/${Date.now()}_${file.name}`);
+            const snap = await uploadBytes(sRef, opt);
+            imgUrl = await getDownloadURL(snap.ref);
+        }
+        await addDoc(collection(db, "clientes", idClienteDoc, "ofertas"), {
+            titulo: document.getElementById('ofertaTitulo').value,
+            link: document.getElementById('ofertaLink').value,
+            imagem: imgUrl,
+            dataCriacao: serverTimestamp()
+        });
+        alert("Oferta publicada!");
+        e.target.reset();
+        carregarOfertas();
+    } catch (err) { alert("Erro ao salvar oferta."); }
 });
 
 document.getElementById('formLeitura')?.addEventListener('submit', async (e) => {
