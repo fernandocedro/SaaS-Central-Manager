@@ -160,9 +160,7 @@
                     <label style="color: var(--cor-primaria); display: block; margin-bottom: 8px; font-weight: bold;">Motivo da Oração</label>
                     <textarea id="oracaoTexto" rows="5" placeholder="Escreva aqui seu pedido..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; outline: none; resize: none;"></textarea>
                 </div>
-                <button id="btnEnviarOracao" onclick="window.enviarPedidoOracao()" style="width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--cor-primaria); color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem;">
-                    <i class="fas fa-paper-plane"></i> Enviar Pedido
-                </button>
+               <button onclick="window.enviarPedidoOracao()">Enviar Pedido</button><p id="statusOracao" style="display:none; text-align:center; margin-top:10px; font-weight:bold;"></p>
                 <div id="msgSucessoOracao" style="display: none; background: #1b4332; color: #d8f3dc; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #2d6a4f; margin-top: 15px;">
                     <i class="fas fa-check-circle"></i> Pedido enviado com sucesso! Deus te abençoe.
                 </div>
@@ -364,3 +362,4 @@
     </script>
 </body>
 </html>
+
