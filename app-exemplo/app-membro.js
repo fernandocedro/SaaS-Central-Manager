@@ -148,7 +148,12 @@ async function inicializarApp() {
             const userDoc = await getDoc(doc(db, "usuarios_app", user.uid));
             if (userDoc.exists()) {
                 const userData = userDoc.data();
-                if(nomeDisplay) nomeDisplay.innerText = userData.nome || user.displayName || "Membro";
+                const nomeFinal = userData.nome || user.displayName || "Membro";
+                if(nomeDisplay) nomeDisplay.innerText = nomeFinal;
+                
+                // Pré-preencher campos de inscrição se existirem
+                if(document.getElementById('ins_nome')) document.getElementById('ins_nome').value = userData.nome || "";
+
                 if(userData.fotoUrl || user.photoURL) {
                     const urlFinal = userData.fotoUrl || user.photoURL;
                     if(fotoDisplay) fotoDisplay.src = urlFinal;
@@ -235,7 +240,7 @@ async function carregarAgenda() {
             const corEvento = evento.cor || 'var(--cor-primaria)';
 
             container.innerHTML += `
-                <div class="card-agenda" onclick="window.abrirInscricao('${evento.id}', '${evento.titulo}')" style="display:flex; background:#1a1a1a; margin-bottom:12px; border-radius:12px; overflow:hidden; border:1px solid #333; cursor:pointer;">
+                <div class="card-agenda" onclick="window.abrirInscricao('${evento.id}', '${evento.titulo}', '${evento.data}', '${evento.hora}')" style="display:flex; background:#1a1a1a; margin-bottom:12px; border-radius:12px; overflow:hidden; border:1px solid #333; cursor:pointer;">
                     <div style="background:${corEvento}; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-weight:bold; text-transform:uppercase; flex-shrink:0;">
                         <span style="font-size:1.3rem; line-height:1;">${dia}</span>
                         <span style="font-size:0.75rem;">${mes}</span>
@@ -257,11 +262,18 @@ async function carregarAgenda() {
 }
 
 // Funções de Modal de Inscrição
-window.abrirInscricao = (id, titulo) => {
+window.abrirInscricao = (id, titulo, data, hora) => {
     const modal = document.getElementById('modalInscricao');
     if (!modal) return;
+    
     document.getElementById('ins_evento_id').value = id;
     document.getElementById('ins_evento_titulo').innerText = titulo;
+    
+    // Mostra data e hora no modal para conferência
+    const dataFormatada = data ? data.split('-').reverse().join('/') : "";
+    const infoEvento = document.getElementById('ins_evento_data_hora');
+    if(infoEvento) infoEvento.innerText = `${dataFormatada} às ${hora || '--:--'}`;
+
     modal.style.display = 'flex';
 };
 
@@ -275,18 +287,27 @@ window.confirmarInscricao = async () => {
     const sobrenome = document.getElementById('ins_sobrenome').value;
     const cpf = document.getElementById('ins_cpf').value;
 
-    if (!nome || !cpf) return alert("Preencha Nome e CPF para continuar.");
+    if (!nome || !cpf) return alert("Preencha seu Nome e CPF para continuar.");
 
     try {
+        // CORREÇÃO: Salvando com campos separados para facilitar a leitura no Admin
         await addDoc(collection(db, "clientes", idCliente, "eventos", idEv, "inscritos"), {
-            nomeCompleto: `${nome} ${sobrenome}`,
+            nome: nome,
+            sobrenome: sobrenome,
+            nomeCompleto: `${nome} ${sobrenome}`, // Mantemos o completo para busca rápida
             cpf: cpf,
-            userId: auth.currentUser.uid,
+            userId: auth.currentUser ? auth.currentUser.uid : "anonimo",
+            email: auth.currentUser ? auth.currentUser.email : "",
             dataInscricao: new Date()
         });
+        
         alert("Inscrição confirmada com sucesso!");
         window.fecharInscricao();
+        
+        // Limpar campos após sucesso
+        document.getElementById('ins_cpf').value = "";
     } catch (e) {
+        console.error(e);
         alert("Erro ao realizar inscrição.");
     }
 };
