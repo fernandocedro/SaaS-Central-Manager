@@ -585,5 +585,13 @@ function escutarMeusPedidosOracao() {
     });
 }
 
+// Lógica para mostrar/esconder campo de data de casamento
+window.toggleDataCasamento = () => {
+    const statusCasado = document.getElementById('perfilCasado').value;
+    const divData = document.getElementById('divDataCasamento');
+    divData.style.display = (statusCasado === 'sim') ? 'block' : 'none';
+};
+
 window.logoutCliente = () => { signOut(auth).then(() => { location.reload(); }); };
 window.addEventListener('DOMContentLoaded', inicializarApp);
+
