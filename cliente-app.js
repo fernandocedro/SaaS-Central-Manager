@@ -58,7 +58,7 @@ window.mostrarSessao = (sessao) => {
     }
 };
 
-// --- 3. LÓGICA CONDICIONAL DE EVENTOS ---
+// --- 3. LÓGICA CONDICIONAL ---
 window.toggleInscricao = () => {
     const check = document.getElementById('checkInscricao');
     const bloco = document.getElementById('blocoInscricao');
@@ -121,7 +121,7 @@ document.getElementById('formConteudo')?.addEventListener('submit', async (e) =>
     e.preventDefault();
     const btn = document.getElementById('btnAcaoPrincipal');
     const inputThumb = document.getElementById('videoThumb');
-    const thumbFile = inputThumb?.files ? inputThumb.files[0] : null;
+    const thumbFile = inputThumb?.files?.[0]; // Uso do optional chaining
     
     if (btn) { btn.disabled = true; btn.innerText = "Publicando..."; }
 
@@ -176,7 +176,7 @@ document.getElementById('formNoticia')?.addEventListener('submit', async (e) => 
     e.preventDefault();
     const btn = document.getElementById('btnSalvarNoticia');
     const inputImg = document.getElementById('noticiaImg');
-    const imgFile = inputImg?.files ? inputImg.files[0] : null;
+    const imgFile = inputImg?.files?.[0];
     
     if (btn) { btn.disabled = true; btn.innerText = "Publicando..."; }
 
@@ -205,7 +205,7 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSalvarEvento');
     const inputImg = document.getElementById('eventoImg');
-    const imgFile = inputImg?.files ? inputImg.files[0] : null;
+    const imgFile = inputImg?.files?.[0];
     
     if (btn) { btn.disabled = true; btn.innerText = "Publicando..."; }
 
@@ -233,8 +233,7 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
 
         alert("Evento publicado com sucesso!");
         e.target.reset();
-        const bloco = document.getElementById('blocoInscricao');
-        if(bloco) bloco.style.display = 'none';
+        if(document.getElementById('blocoInscricao')) document.getElementById('blocoInscricao').style.display = 'none';
         carregarEventos();
     } catch (err) { console.error(err); alert("Erro ao publicar evento."); }
     finally { if (btn) { btn.disabled = false; btn.innerText = "Publicar Evento"; } }
@@ -313,7 +312,7 @@ document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSalvarOferta');
     const inputImg = document.getElementById('ofertaImg');
-    const imgFile = inputImg?.files ? inputImg.files[0] : null;
+    const imgFile = inputImg?.files?.[0];
 
     if (btn) { btn.disabled = true; btn.innerText = "Salvando..."; }
 
@@ -335,11 +334,8 @@ document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
         alert("Opção de oferta cadastrada!");
         e.target.reset();
         carregarOfertas();
-    } catch (err) { 
-        alert("Erro ao cadastrar oferta."); 
-    } finally { 
-        if (btn) { btn.disabled = false; btn.innerText = "Cadastrar Opção de Oferta"; }
-    }
+    } catch (err) { alert("Erro ao cadastrar oferta."); } 
+    finally { if (btn) { btn.disabled = false; btn.innerText = "Cadastrar Opção de Oferta"; } }
 });
 
 function carregarOfertas() {
@@ -361,9 +357,7 @@ function carregarOfertas() {
                             <a href="${of.link}" target="_blank" class="btn-edit-sm" style="background: #eab308; text-decoration: none; display: flex; align-items: center; justify-content: center;" title="Testar Link Externo">
                                 <i class="fas fa-external-link-alt"></i>
                             </a>
-                            <button onclick="window.excluirOferta('${docSnap.id}')" class="btn-delete-sm">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <button onclick="window.excluirOferta('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 </div>`;
@@ -388,6 +382,7 @@ function carregarUsuariosApp() {
         snapshot.forEach((docSnap) => {
             const user = docSnap.data();
             const dataFmt = user.dataCadastro ? user.dataCadastro.toDate().toLocaleDateString('pt-BR') : '---';
+            const nomeLimpo = (user.nome||"Membro").replace(/'/g, "\\'");
             
             tbody.innerHTML += `
                 <tr>
@@ -395,7 +390,7 @@ function carregarUsuariosApp() {
                     <td>${user.email || ''}</td>
                     <td>${dataFmt}</td>
                     <td>
-                        <button onclick="window.abrirModalGerenciarUsuario('${docSnap.id}', '${(user.nome||"").replace(/'/g, "\\'")}', '${user.email}')" class="btn-edit-sm">
+                        <button onclick="window.abrirModalGerenciarUsuario('${docSnap.id}', '${nomeLimpo}', '${user.email}')" class="btn-edit-sm">
                             <i class="fas fa-user-shield"></i> Gerenciar
                         </button>
                     </td>
@@ -426,10 +421,8 @@ window.resetarSenhaUsuario = async () => {
     if (!email) return;
     try {
         await sendPasswordResetEmail(auth, email);
-        alert("E-mail de redefinição de senha enviado para: " + email);
-    } catch (err) {
-        alert("Erro ao enviar reset: " + err.message);
-    }
+        alert("E-mail de redefinição de senha enviado!");
+    } catch (err) { alert("Erro: " + err.message); }
 };
 
 window.excluirUsuarioApp = async () => {
@@ -441,7 +434,7 @@ window.excluirUsuarioApp = async () => {
     }
 };
 
-// --- NOVAS FUNCIONALIDADES: LEITURA BÍBLICA ---
+// --- LEITURA BÍBLICA ---
 document.getElementById('formLeitura')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
@@ -496,12 +489,7 @@ function carregarOracoes() {
     const q = query(collection(db, "clientes", idClienteDoc, "pedidos_oracao"), orderBy("dataCriacao", "desc"));
     
     onSnapshot(q, (snapshot) => {
-        tbody.innerHTML = "";
-        if (snapshot.empty) {
-            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center; padding: 20px; color: #888;'>Nenhum pedido de oração enviado pelo App ainda.</td></tr>";
-            return;
-        }
-
+        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center; padding: 20px; color: #888;'>Nenhum pedido recebido.</td></tr>" : "";
         snapshot.forEach((docSnap) => {
             const ora = docSnap.data();
             let dataFmt = '---';
@@ -509,27 +497,18 @@ function carregarOracoes() {
                 const d = ora.dataCriacao.toDate ? ora.dataCriacao.toDate() : new Date(ora.dataCriacao);
                 dataFmt = d.toLocaleDateString('pt-BR') + " " + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             }
-            
             tbody.innerHTML += `
                 <tr>
                     <td style="font-size: 0.85rem; color: #888;">${dataFmt}</td>
                     <td><strong>${ora.nome || 'Anônimo'}</strong></td>
                     <td style="max-width: 350px; white-space: normal; line-height: 1.4;">${ora.pedido || 'Sem texto'}</td>
-                    <td>
-                        <button onclick="window.excluirOracao('${docSnap.id}')" class="btn-delete-sm" title="Excluir">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
+                    <td><button onclick="window.excluirOracao('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button></td>
                 </tr>`;
         });
     });
 }
 
-window.excluirOracao = async (id) => {
-    if (confirm("Excluir pedido de oração permanentemente?")) {
-        await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id));
-    }
-};
+window.excluirOracao = async (id) => { if (confirm("Excluir permanentemente?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id)); };
 
 // --- NOTIFICAÇÕES PUSH ---
 document.getElementById('formPush')?.addEventListener('submit', async (e) => {
@@ -543,7 +522,7 @@ document.getElementById('formPush')?.addEventListener('submit', async (e) => {
             mensagem: document.getElementById('pushMensagem')?.value || "",
             dataEnvio: serverTimestamp()
         });
-        alert("Comando de notificação enviado!");
+        alert("Notificação enviada!");
         e.target.reset();
     } catch (err) { alert("Erro ao enviar push."); }
     finally { if (btn) { btn.disabled = false; btn.innerText = "Disparar Notificação"; } }
@@ -571,36 +550,30 @@ function aplicarIdentidadeVisual(dados) {
 
 onAuthStateChanged(auth, (user) => {
     if (!user) {
-        if (!window.location.href.includes("login-cliente.html")) {
-            window.location.href = "login-cliente.html";
-        }
+        if (!window.location.href.includes("login-cliente.html")) window.location.href = "login-cliente.html";
     } else {
         buscarDadosCliente(user.uid);
     }
 });
 
-// FUNÇÕES GLOBAIS DE EXCLUSÃO
+// FUNÇÕES GLOBAIS
 window.excluirVideo = async (id) => { if (confirm("Excluir vídeo?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "conteudos", id)); };
 window.excluirNoticia = async (id) => { if (confirm("Excluir notícia?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "noticias", id)); };
 window.excluirEvento = async (id) => { if (confirm("Excluir evento?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "eventos", id)); };
 
-// MODAL EDIÇÃO VÍDEO E SENHA
+// EDIÇÃO E MODAIS
 window.prepararEdicaoVideo = (id, serie, desc) => {
     const elId = document.getElementById('editVideoId');
     const elSerie = document.getElementById('editVideoSerie');
     const elDesc = document.getElementById('editVideoDesc');
     const modal = document.getElementById('modalEditarVideo');
-
     if (elId) elId.value = id;
     if (elSerie) elSerie.value = serie;
     if (elDesc) elDesc.value = desc;
     if (modal) modal.style.display = 'flex';
 };
 
-window.fecharModalEdicao = () => {
-    const modal = document.getElementById('modalEditarVideo');
-    if(modal) modal.style.display = 'none';
-};
+window.fecharModalEdicao = () => { if(document.getElementById('modalEditarVideo')) document.getElementById('modalEditarVideo').style.display = 'none'; };
 
 document.getElementById('formEditarVideo')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -612,15 +585,9 @@ document.getElementById('formEditarVideo')?.addEventListener('submit', async (e)
             descricao: document.getElementById('editVideoDesc')?.value || ""
         });
         window.fecharModalEdicao();
-    } catch(err) { alert("Erro ao editar vídeo."); }
+    } catch(err) { alert("Erro ao editar."); }
 });
 
-window.abrirModalSenha = () => {
-    const modal = document.getElementById('modalSenhaCliente');
-    if(modal) modal.style.display = 'flex';
-};
-window.fecharModalSenha = () => {
-    const modal = document.getElementById('modalSenhaCliente');
-    if(modal) modal.style.display = 'none';
-};
+window.abrirModalSenha = () => { if(document.getElementById('modalSenhaCliente')) document.getElementById('modalSenhaCliente').style.display = 'flex'; };
+window.fecharModalSenha = () => { if(document.getElementById('modalSenhaCliente')) document.getElementById('modalSenhaCliente').style.display = 'none'; };
 window.logoutCliente = () => { if(confirm("Sair?")) signOut(auth).then(() => window.location.href = "login-cliente.html"); };
