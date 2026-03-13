@@ -81,7 +81,6 @@ window.mudarModoAuth = (modo) => {
 window.loginGoogle = async () => {
     try { 
         const result = await signInWithPopup(auth, googleProvider);
-        // Salva ou atualiza os dados do usuário no Firestore após login social
         await setDoc(doc(db, "usuarios_app", result.user.uid), {
             nome: result.user.displayName,
             email: result.user.email,
@@ -106,7 +105,6 @@ document.getElementById('formAuth')?.addEventListener('submit', async (e) => {
             await signInWithEmailAndPassword(auth, email, senha);
         } else if (btnTexto === "Cadastrar agora") {
             const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
-            // setDoc é usado aqui pois o documento pode não existir ainda
             await setDoc(doc(db, "usuarios_app", userCredential.user.uid), {
                 nome: nome, 
                 email: email, 
@@ -126,7 +124,6 @@ document.getElementById('formAuth')?.addEventListener('submit', async (e) => {
 async function inicializarApp() {
     if (!idCliente) { alert("Erro: ID do cliente não encontrado."); return; }
 
-    // Carrega branding do cliente
     const docRef = doc(db, "clientes", idCliente);
     const docSnap = await getDoc(docRef);
 
@@ -148,8 +145,6 @@ async function inicializarApp() {
 
         if (user) {
             if(authContainer) authContainer.style.display = 'none';
-            
-            // Busca dados complementares do Firestore
             const userDoc = await getDoc(doc(db, "usuarios_app", user.uid));
             if (userDoc.exists()) {
                 const userData = userDoc.data();
@@ -187,7 +182,6 @@ window.mostrarSessao = (aba) => {
     const alvo = document.getElementById('sessao' + aba.charAt(0).toUpperCase() + aba.slice(1));
     if(alvo) alvo.style.display = 'block';
 
-    // Trigger de carregamento por aba
     if (aba === 'home') {
         carregarVideosHome();
         carregarNoticiasHome();
@@ -207,7 +201,7 @@ window.mostrarSessao = (aba) => {
     }
 };
 
-// --- AGENDA DE EVENTOS ---
+// --- AGENDA DE EVENTOS E INSCRIÇÃO ---
 async function carregarAgenda() {
     if (!idCliente) return;
     const container = document.getElementById('listaEventos');
@@ -229,7 +223,6 @@ async function carregarAgenda() {
             eventos.push({ id: doc.id, ...doc.data() });
         });
 
-        // Ordenação manual por data para evitar necessidade de índices compostos iniciais
         eventos.sort((a, b) => (a.data > b.data ? 1 : -1));
 
         container.innerHTML = "";
@@ -242,7 +235,7 @@ async function carregarAgenda() {
             const corEvento = evento.cor || 'var(--cor-primaria)';
 
             container.innerHTML += `
-                <div class="card-agenda" style="display:flex; background:#1a1a1a; margin-bottom:12px; border-radius:12px; overflow:hidden; border:1px solid #333;">
+                <div class="card-agenda" onclick="window.abrirInscricao('${evento.id}', '${evento.titulo}')" style="display:flex; background:#1a1a1a; margin-bottom:12px; border-radius:12px; overflow:hidden; border:1px solid #333; cursor:pointer;">
                     <div style="background:${corEvento}; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-weight:bold; text-transform:uppercase; flex-shrink:0;">
                         <span style="font-size:1.3rem; line-height:1;">${dia}</span>
                         <span style="font-size:0.75rem;">${mes}</span>
@@ -253,7 +246,7 @@ async function carregarAgenda() {
                             <span><i class="far fa-clock" style="color:${corEvento}"></i> ${evento.hora || '--:--'}</span>
                             ${evento.local ? `<span><i class="fas fa-map-marker-alt" style="color:${corEvento}"></i> ${evento.local}</span>` : ''}
                         </div>
-                        ${evento.descricao ? `<p style="margin:8px 0 0 0; color:#888; font-size:0.8rem; line-height:1.4;">${evento.descricao}</p>` : ''}
+                        <p style="margin-top:8px; color:var(--cor-primaria); font-size:0.75rem; font-weight:bold;">Toque para se inscrever</p>
                     </div>
                 </div>`;
         });
@@ -262,6 +255,41 @@ async function carregarAgenda() {
         container.innerHTML = `<p style="color:red; text-align:center; padding:20px;">Erro ao carregar agenda.</p>`;
     }
 }
+
+// Funções de Modal de Inscrição
+window.abrirInscricao = (id, titulo) => {
+    const modal = document.getElementById('modalInscricao');
+    if (!modal) return;
+    document.getElementById('ins_evento_id').value = id;
+    document.getElementById('ins_evento_titulo').innerText = titulo;
+    modal.style.display = 'flex';
+};
+
+window.fecharInscricao = () => {
+    document.getElementById('modalInscricao').style.display = 'none';
+};
+
+window.confirmarInscricao = async () => {
+    const idEv = document.getElementById('ins_evento_id').value;
+    const nome = document.getElementById('ins_nome').value;
+    const sobrenome = document.getElementById('ins_sobrenome').value;
+    const cpf = document.getElementById('ins_cpf').value;
+
+    if (!nome || !cpf) return alert("Preencha Nome e CPF para continuar.");
+
+    try {
+        await addDoc(collection(db, "clientes", idCliente, "eventos", idEv, "inscritos"), {
+            nomeCompleto: `${nome} ${sobrenome}`,
+            cpf: cpf,
+            userId: auth.currentUser.uid,
+            dataInscricao: new Date()
+        });
+        alert("Inscrição confirmada com sucesso!");
+        window.fecharInscricao();
+    } catch (e) {
+        alert("Erro ao realizar inscrição.");
+    }
+};
 
 // --- LEITURA DIÁRIA ---
 async function carregarLeituraDiaria() {
@@ -471,7 +499,6 @@ window.selecionarCapitulo = (livro) => {
     livroSelecionado = livro;
     const container = document.getElementById('containerSelecao');
     container.innerHTML = `<div style="grid-column:1/-1; padding:10px; font-weight:bold; color:var(--cor-primaria)">${livro}: Escolha o Capítulo</div>`;
-    // Loop de capítulos genérico (A API bible-api valida se o capítulo existe)
     for(let i = 1; i <= 60; i++) {
         container.innerHTML += `<button onclick="window.finalizarSelecao('${livro}', ${i})" style="background:var(--cor-primaria); color:white;">${i}</button>`;
     }
