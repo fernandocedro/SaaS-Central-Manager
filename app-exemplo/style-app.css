@@ -791,4 +791,39 @@ body {
 }
 
 
+/* Estilo para o botão de enviar pedido de oração */
+button[onclick="window.enviarPedidoOracao()"] {
+    width: 100%;
+    background-color: #d600f0; /* Roxo vibrante conforme a imagem da ADM */
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease;
+    margin-top: 15px;
+    display: block;
+    text-align: center;
+}
+
+/* Efeito ao passar o mouse */
+button[onclick="window.enviarPedidoOracao()"]:hover {
+    background-color: #b500cc;
+    transform: scale(1.02);
+}
+
+/* Efeito ao clicar */
+button[onclick="window.enviarPedidoOracao()"]:active {
+    transform: scale(0.98);
+}
+
+/* Estilo do parágrafo de status */
+#statusOracao {
+    font-size: 14px;
+    margin-top: 12px;
+    color: #ffffff;
+}
+
 
