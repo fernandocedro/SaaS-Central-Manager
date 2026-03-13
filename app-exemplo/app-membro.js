@@ -369,8 +369,8 @@ function renderizarLeituras() {
             <div class="card-leitura-diaria" style="background:#1a1a1a; padding:20px; border-radius:15px; margin-bottom:15px; border:1px solid #333;">
                 <h2 style="color:#fff; margin: 0 0 10px 0; font-size:1.4rem;">${dados.referencia || 'Leitura'}</h2>
                 <div style="color:#bbb; margin-bottom:15px;">${dados.texto ? dados.texto.replace(/\n/g, '<br>') : ''}</div>
-                <button onclick="window.toggleLido('${dados.id}')" style="width:100%; padding:12px; background:#222; color:white; border-radius:10px; border:1px solid #444;">
-                    ${estaLida ? 'Marcar como não lido' : 'Marcar como lido'}
+                <button onclick="window.toggleLido('${dados.id}')" style="width:100%; padding:12px; background:#222; color:white; border-radius:10px; border:1px solid #444; cursor:pointer;">
+                    ${estaLida ? 'Marcar como não lida' : 'Marcar como lido'}
                 </button>
             </div>`;
     });
@@ -379,7 +379,13 @@ function renderizarLeituras() {
 window.toggleLido = (id) => {
     const chaveLidos = `leituras_lidas_${idCliente}`;
     let lidas = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
-    lidas = lidas.includes(id) ? lidas.filter(i => i !== id) : [...lidas, id];
+    
+    if (lidas.includes(id)) {
+        lidas = lidas.filter(i => i !== id);
+    } else {
+        lidas.push(id);
+    }
+    
     localStorage.setItem(chaveLidos, JSON.stringify(lidas));
     renderizarLeituras(); 
 };
@@ -577,3 +583,4 @@ function escutarMeusPedidosOracao() {
 
 window.logoutCliente = () => { signOut(auth).then(() => { location.reload(); }); };
 window.addEventListener('DOMContentLoaded', inicializarApp);
+
