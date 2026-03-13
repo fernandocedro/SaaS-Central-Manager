@@ -318,23 +318,48 @@ body {
 }
 
 /* Card ajustado para 2 por linha */
+/* Container que segura as reflexões */
+#gradeNoticias {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; /* Força 2 colunas iguais sempre */
+    gap: 10px !important;
+    padding: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    align-items: start;
+}
+
+/* O Card */
 .card-reflexao-premium {
-    flex: 0 0 calc(50% - 6px); /* Ocupa metade da largura menos metade do gap */
+    width: 100% !important; /* Ele vai obedecer ao tamanho da coluna do Grid */
     background: #111;
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.2s;
     border: 1px solid #333;
     display: flex;
     flex-direction: column;
 }
 
+/* A Imagem */
 .card-reflexao-premium img {
-    width: 100%;
-    height: 110px; /* Reduzi um pouco a altura para caber melhor lado a lado */
-    object-fit: cover;
+    width: 100% !important;
+    height: 100px !important; /* Altura fixa para não variar entre os cards */
+    object-fit: cover !important;
     display: block;
+}
+
+/* O Título */
+.card-reflexao-premium .video-info {
+    padding: 8px;
+    font-size: 0.8rem;
+    color: #fff;
+    text-align: center;
+    /* Impede que títulos muito longos empurrem o layout */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 /* Estilo do título dentro do card (se houver) */
@@ -609,5 +634,6 @@ body {
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 
         }
+
 
 
