@@ -618,3 +618,26 @@ input[type="color"]::-webkit-color-swatch {
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     position: relative; /* Garante que não fuja para a direita */
 }
+
+ /* CSS Auxiliar para os novos campos de eventos */
+        .dinamico-opcoes {
+            display: flex;
+            gap: 20px;
+            margin: 15px 0;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed #444;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .checkbox-item input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
