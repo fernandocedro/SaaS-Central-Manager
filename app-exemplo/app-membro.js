@@ -592,7 +592,64 @@ window.toggleDataCasamento = () => {
     divCasamento.style.display = (status === 'sim') ? 'block' : 'none';
 };
 
+// Função para Salvar os Dados do Perfil
+window.salvarPerfil = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+        alert("Você precisa estar logado para salvar.");
+        return;
+    }
+
+    // Coleta os valores dos campos do HTML
+    const dados = {
+        nome: document.getElementById('perfilNome').value,
+        email: document.getElementById('perfilEmail').value,
+        whatsapp: document.getElementById('perfilTel').value,
+        nascimento: document.getElementById('perfilNascimento').value,
+        status: document.getElementById('perfilStatus').value,
+        conversao: document.getElementById('perfilConversao').value,
+        batismo: document.getElementById('perfilBatismo').value,
+        casado: document.getElementById('perfilCasado').value,
+        dataCasamento: document.getElementById('perfilDataCasamento').value,
+        ultimaAtualizacao: new Date().toISOString()
+    };
+
+    try {
+        // Salva no Firestore (Coleção 'usuarios' ou 'membros')
+        // Ajuste 'usuarios' para o nome da sua coleção se for diferente
+        await setDoc(doc(db, "usuarios", user.uid), dados, { merge: true });
+        
+        alert("Perfil atualizado com sucesso!");
+        
+        // Opcional: Atualiza o nome na tela principal
+        if(document.getElementById('nomeMembro')) {
+            document.getElementById('nomeMembro').innerText = dados.nome;
+        }
+
+    } catch (error) {
+        console.error("Erro ao salvar perfil:", error);
+        alert("Erro ao salvar informações. Tente novamente.");
+    }
+};
+
+// Função para Excluir Conta
+window.excluirConta = async () => {
+    if (confirm("Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.")) {
+        const user = auth.currentUser;
+        try {
+            await deleteDoc(doc(db, "usuarios", user.uid)); // Remove dados
+            await user.delete(); // Remove login
+            alert("Conta excluída com sucesso.");
+            window.location.reload();
+        } catch (error) {
+            console.error("Erro ao excluir:", error);
+            alert("Para excluir sua conta, você precisa ter feito login recentemente. Saia e entre novamente para realizar esta ação.");
+        }
+    }
+};
+
 window.logoutCliente = () => { signOut(auth).then(() => { location.reload(); }); };
 window.addEventListener('DOMContentLoaded', inicializarApp);
+
 
 
