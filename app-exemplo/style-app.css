@@ -705,56 +705,90 @@ body {
         }
 
 
-/* Estilização do Perfil */
+/* Container do Perfil */
 .perfil-container-premium {
-    background: #1a1a1a;
+    background: #121212; /* Fundo bem escuro */
     padding: 20px;
     border-radius: 15px;
     border: 1px solid #333;
+    margin-bottom: 80px; /* Espaço para a tab-bar não cobrir */
 }
+
+/* Estilo dos Inputs e Selects */
 .grupo-input {
     margin-bottom: 15px;
+    text-align: left;
 }
+
 .grupo-input label {
     display: block;
-    color: var(--cor-primaria);
-    font-size: 0.8rem;
-    font-weight: bold;
-    margin-bottom: 5px;
+    color: #a8a8a8; /* Cinza claro */
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    font-weight: 500;
 }
-.grupo-input input, .grupo-input select {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    background: #000;
-    border: 1px solid #333;
-    color: #fff;
+
+.grupo-input input, 
+.grupo-input select {
+    width: 100% !important;
+    padding: 12px !important;
+    background: #1a1a1a !important; /* Cinza muito escuro */
+    border: 1px solid #333 !important;
+    border-radius: 10px !important;
+    color: #fff !important;
+    font-size: 1rem;
     outline: none;
+    box-sizing: border-box;
 }
+
+/* Grid para campos lado a lado */
 .grid-perfil {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 15px;
 }
+
+/* Botões do Perfil */
+.btn-acao-perfil {
+    width: 100%;
+    background: var(--cor-primaria, #8e44ad);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
 .btn-excluir-conta {
     width: 100%;
     background: transparent;
-    color: #ff4444;
-    border: 1px solid #ff4444;
+    color: #ff4d4d;
+    border: 1px solid #ff4d4d;
     padding: 12px;
     border-radius: 10px;
     margin-top: 15px;
+    font-weight: 600;
     cursor: pointer;
-    font-weight: bold;
 }
 
-/* Forçar Grade de Vídeos em 2 colunas */
-#gradeVideosCompleta {
+/* GRADE DE VÍDEOS 2x2 */
+.grade-premium-videos {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 12px !important;
+    grid-template-columns: 1fr 1fr !important; /* Força 2 colunas */
+    gap: 15px !important;
+    padding-bottom: 100px;
 }
 
+/* Ajuste das miniaturas de vídeo dentro da grade */
+.grade-premium-videos .video-card {
+    background: #1a1a1a;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #333;
+}
 
 
 
