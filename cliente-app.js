@@ -34,7 +34,7 @@ async function otimizarImagem(arquivo) {
     }
 }
 
-const esc = (str) => str ? str.replace(/'/g, "\\'").replace(/"/g, "&quot;") : "";
+const esc = (str) => str ? String(str).replace(/'/g, "\\'").replace(/"/g, "&quot;") : "";
 
 // --- 2. NAVEGAÇÃO ENTRE ABAS ---
 window.mostrarSessao = (sessao) => {
@@ -386,9 +386,10 @@ window.excluirOferta = async (id) => {
     if (confirm("Deseja remover esta opção de oferta?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "ofertas", id));
 };
 
-// --- 8. GESTÃO DE USUÁRIOS DO APP ---
+// --- 8. GESTÃO DE USUÁRIOS DO APP (MELHORADO) ---
 function carregarUsuariosApp() {
     if (!idClienteDoc) return;
+    // Corrigido para carregar todos os membros vinculados ao cliente
     const q = query(collection(db, "usuarios_app"), where("clienteId", "==", idClienteDoc));
     onSnapshot(q, (snapshot) => {
         const tbody = document.getElementById('tabelaUsuariosBody');
@@ -397,12 +398,18 @@ function carregarUsuariosApp() {
 
         snapshot.forEach((docSnap) => {
             const user = docSnap.data();
-            const dataFmt = user.dataCadastro?.toDate ? user.dataCadastro.toDate().toLocaleDateString('pt-BR') : '---';
+            // Fallback para usuários do Google que podem não ter dataCadastro gravada da mesma forma
+            let dataFmt = 'Google/Rede Social';
+            if (user.dataCadastro?.toDate) {
+                dataFmt = user.dataCadastro.toDate().toLocaleDateString('pt-BR');
+            } else if (user.dataCadastro) {
+                dataFmt = new Date(user.dataCadastro).toLocaleDateString('pt-BR');
+            }
             
             tbody.innerHTML += `
                 <tr>
-                    <td>${user.nome || 'Membro'}</td>
-                    <td>${user.email || ''}</td>
+                    <td>${user.nome || 'Usuário'}</td>
+                    <td>${user.email || 'S/ Email'}</td>
                     <td>${dataFmt}</td>
                     <td>
                         <button onclick="window.abrirModalGerenciarUsuario('${docSnap.id}', '${esc(user.nome)}', '${user.email}')" class="btn-edit-sm">
