@@ -220,10 +220,35 @@ window.mostrarSessao = (aba) => {
 };
 
 // --- FUNÇÃO DE OFERTAS (Vazia para evitar erro de ReferenceError) ---
+// --- FUNÇÃO DE OFERTAS (ATUALIZADA) ---
 window.carregarOfertas = () => {
-    // Esta função existe apenas para o onclick do HTML não dar erro.
-    // O conteúdo da oferta já está fixo no seu HTML.
-    console.log("Sessão de ofertas aberta.");
+    const container = document.getElementById('listaOfertasContainer');
+    if (!container) return;
+
+    // Aqui você pode personalizar os dados da sua igreja
+    container.innerHTML = `
+        <div style="background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #333; text-align: center; margin-bottom: 20px;">
+            <i class="fas fa-heart" style="font-size: 2rem; color: var(--cor-primaria); margin-bottom: 15px;"></i>
+            <h4 style="color: #fff; margin-bottom: 10px;">Dízimos e Ofertas</h4>
+            <p style="color: #bbb; font-size: 0.9rem; margin-bottom: 20px;">"Cada um dê conforme determinou em seu coração, não com pesar ou por obrigação, pois Deus ama quem dá com alegria." <br><small>(2 Coríntios 9:7)</small></p>
+            
+            <div style="background: #222; padding: 15px; border-radius: 10px; border: 1px dashed var(--cor-primaria); margin-bottom: 15px;">
+                <span style="color: #888; font-size: 0.8rem; display: block; margin-bottom: 5px;">CHAVE PIX</span>
+                <strong style="color: #fff; font-size: 1.1rem; letter-spacing: 1px;">suachavepix@aqui.com</strong>
+                <button onclick="navigator.clipboard.writeText('suachavepix@aqui.com').then(() => alert('Pix copiado!'))" 
+                        style="display: block; width: 100%; margin-top: 10px; background: transparent; border: 1px solid var(--cor-primaria); color: var(--cor-primaria); padding: 5px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
+                    <i class="far fa-copy"></i> Copiar Chave Pix
+                </button>
+            </div>
+
+            <div style="text-align: left; color: #bbb; font-size: 0.9rem;">
+                <p><strong>Conta Bancária:</strong></p>
+                <p>Banco: Nome do Banco</p>
+                <p>Agência: 0000 | Conta: 00000-0</p>
+                <p>CNPJ: 00.000.000/0001-00</p>
+            </div>
+        </div>
+    `;
 };
 
 // --- DEPARTAMENTOS ---
@@ -655,3 +680,4 @@ window.logout = () => { signOut(auth); };
 
 // Inicializa o App
 inicializarApp();
+
