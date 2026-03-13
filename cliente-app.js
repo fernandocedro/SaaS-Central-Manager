@@ -213,18 +213,35 @@ function carregarOfertas() {
 
 function carregarUsuariosApp() {
     if (!idClienteDoc) return;
-    const q = query(collection(db, "usuarios_app"), where("clienteId", "==", idClienteDoc));
+    
+    // Filtra apenas usuários que pertencem a esta igreja/cliente
+    const q = query(collection(db, "usuarios_app"), where("idCliente", "==", idClienteDoc));
+    
     onSnapshot(q, (snap) => {
         const tbody = document.getElementById('tabelaUsuariosBody');
         if (!tbody) return;
+        
+        if (snap.empty) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888; padding:20px;">
+                Nenhum usuário encontrado para este ID (${idClienteDoc}). <br>
+                Certifique-se que o usuário tem o campo 'idCliente' no Firestore.
+            </td></tr>`;
+            return;
+        }
+
         tbody.innerHTML = "";
         snap.forEach(d => {
             const u = d.data();
-            tbody.innerHTML += `<tr>
-                <td>${u.nome || '---'}</td>
-                <td>${u.email || '---'}</td>
-                <td><button onclick="window.abrirModalGerenciarUsuario('${d.id}', '${esc(u.nome)}', '${u.email}')" class="btn-edit-sm">Gerenciar</button></td>
-            </tr>`;
+            tbody.innerHTML += `
+                <tr>
+                    <td>${u.nome || 'Sem nome'}</td>
+                    <td>${u.email || 'Sem e-mail'}</td>
+                    <td>
+                        <button onclick="window.abrirModalGerenciarUsuario('${d.id}', '${esc(u.nome)}', '${u.email}')" class="btn-edit-sm">
+                            <i class="fas fa-user-cog"></i> Gerenciar
+                        </button>
+                    </td>
+                </tr>`;
         });
     });
 }
@@ -466,3 +483,4 @@ onAuthStateChanged(auth, (user) => {
     if (!user) { window.location.href = "login-cliente.html"; } 
     else { buscarDadosCliente(user.uid); }
 });
+
