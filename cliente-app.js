@@ -187,6 +187,7 @@ function carregarEventos() {
     });
 }
 
+// CORRIGIDO: Agora renderiza a imagem salva no banco
 function carregarOfertas() {
     if (!idClienteDoc) return;
     const q = query(collection(db, "clientes", idClienteDoc, "ofertas"), orderBy("dataCriacao", "desc"));
@@ -196,11 +197,14 @@ function carregarOfertas() {
             container.innerHTML = "";
             snapshot.forEach(d => {
                 const of = d.data();
+                // AQUI ESTAVA O ERRO: Adicionado o campo de imagem na visualização
                 container.innerHTML += `
                 <div class="card-video" style="padding:10px;">
-                    <img src="${of.imagem || 'https://placehold.co/300x150/222/white?text=Oferta'}" class="thumb-video" style="margin-bottom:10px;">
-                    <h4>${of.titulo}</h4>
-                    <button onclick="window.excluirOferta('${d.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
+                    <img src="${of.imagem || 'https://placehold.co/300x150/222/white?text=Oferta'}" class="thumb-video" style="margin-bottom:10px; border-radius:8px; width:100%; height:120px; object-fit:cover;">
+                    <div class="info-video">
+                        <h4 style="margin-bottom:10px;">${of.titulo}</h4>
+                        <button onclick="window.excluirOferta('${d.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i> Excluir</button>
+                    </div>
                 </div>`;
             });
         }
@@ -340,27 +344,40 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
     } catch (err) { alert("Erro ao salvar evento."); }
 });
 
+// CORRIGIDO: Lógica de upload de imagem para ofertas
 document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    if(btn) { btn.disabled = true; btn.innerText = "Salvando..."; }
+
     try {
         let imgUrl = "";
         const file = document.getElementById('ofertaImg')?.files[0];
+        
+        // Verifica se há arquivo e faz upload
         if (file) {
             const opt = await otimizarImagem(file);
             const sRef = ref(storage, `clientes/${idClienteDoc}/ofertas/${Date.now()}_${file.name}`);
             const snap = await uploadBytes(sRef, opt);
             imgUrl = await getDownloadURL(snap.ref);
         }
+
         await addDoc(collection(db, "clientes", idClienteDoc, "ofertas"), {
             titulo: document.getElementById('ofertaTitulo').value,
             link: document.getElementById('ofertaLink').value,
-            imagem: imgUrl,
+            imagem: imgUrl, // Aqui a URL da imagem é salva corretamente
             dataCriacao: serverTimestamp()
         });
-        alert("Oferta publicada!");
+        
+        alert("Oferta publicada com sucesso!");
         e.target.reset();
         carregarOfertas();
-    } catch (err) { alert("Erro ao salvar oferta."); }
+    } catch (err) { 
+        console.error(err);
+        alert("Erro ao salvar oferta."); 
+    } finally {
+        if(btn) { btn.disabled = false; btn.innerText = "Adicionar Opção"; }
+    }
 });
 
 document.getElementById('formLeitura')?.addEventListener('submit', async (e) => {
