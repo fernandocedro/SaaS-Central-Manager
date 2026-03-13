@@ -152,7 +152,7 @@ async function inicializarApp() {
                 const nomeFinal = userData.nome || user.displayName || "Membro";
                 if(nomeDisplay) nomeDisplay.innerText = nomeFinal;
                 
-                // PREENCHE CAMPOS DO PERFIL SE EXISTIREM
+                // PREENCHE CAMPOS DO PERFIL
                 if(document.getElementById('perfilNome')) document.getElementById('perfilNome').value = userData.nome || "";
                 if(document.getElementById('perfilEmail')) document.getElementById('perfilEmail').value = userData.email || user.email || "";
                 if(document.getElementById('perfilTel')) document.getElementById('perfilTel').value = userData.whatsapp || "";
@@ -238,7 +238,7 @@ async function carregarDepartamentos() {
         container.innerHTML = "";
         snap.forEach((docSnapshot) => {
             const dep = docSnapshot.data();
-            const idDep = docSnapshot.id; // Pegamos o ID do departamento
+            const idDep = docSnapshot.id;
 
             container.innerHTML += `
                 <div class="card-departamento" style="background:#1a1a1a; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #333; display:flex; flex-direction:column; gap:10px;">
@@ -262,66 +262,25 @@ async function carregarDepartamentos() {
     }
 }
 
-
-// --- FAZ FUNCIONAR A FUNÇÃO ---
 window.inscreverDepartamento = async (idDep, nomeDep) => {
     const user = auth.currentUser;
-    if (!user) {
-        alert("Você precisa estar logado para se inscrever.");
-        return;
-    }
-
+    if (!user) { alert("Você precisa estar logado para se inscrever."); return; }
     if (!confirm(`Deseja solicitar participação no departamento: ${nomeDep}?`)) return;
 
     try {
-        // Criamos uma inscrição na subcoleção "membros" dentro do departamento
         const membroRef = doc(db, "clientes", idCliente, "departamentos", idDep, "membros", user.uid);
-        
         await setDoc(membroRef, {
             nome: user.displayName || "Membro",
             email: user.email,
             uid: user.uid,
             dataInscricao: new Date(),
-            status: "pendente" // O administrador pode aprovar depois
+            status: "pendente"
         });
-
         alert("Solicitação enviada com sucesso!");
-    } catch (e) {
-        console.error("Erro ao se inscrever:", e);
-        alert("Erro ao realizar inscrição. Verifique suas permissões.");
-    }
+    } catch (e) { alert("Erro ao realizar inscrição."); }
 };
 
-// --- OFERTAS E DÍZIMOS ---
-async function carregarOfertas() {
-    if (!idCliente) return;
-    const container = document.getElementById('listaOfertasContainer');
-    if (!container) return;
-    container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando opções...</p>`;
-    try {
-        const colRef = collection(db, "clientes", idCliente, "ofertas");
-        const snap = await getDocs(colRef);
-        if (snap.empty) {
-            container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhuma informação de dízimo disponível.</p>`;
-            return;
-        }
-        container.innerHTML = "";
-        snap.forEach((doc) => {
-            const of = doc.data();
-            container.innerHTML += `
-                <div class="card-oferta" style="background:#1a1a1a; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #333;">
-                    ${of.imagem ? `<img src="${of.imagem}" style="width:100%; border-radius:8px; margin-bottom:10px;">` : ''}
-                    <h4 style="color:#fff; margin:0 0 5px 0;">${of.titulo || 'Oferta'}</h4>
-                    <p style="color:#aaa; font-size:0.85rem; margin-bottom:12px;">${of.descricao || ''}</p>
-                    <a href="${of.link}" target="_blank" style="display:block; text-align:center; background:var(--cor-primaria); color:white; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold;">
-                        Contribuir Agora
-                    </a>
-                </div>`;
-        });
-    } catch (e) { container.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar ofertas.</p>`; }
-}
-
-// --- AGENDA DE EVENTOS ---
+// --- AGENDA E OUTRAS FUNÇÕES ---
 async function carregarAgenda() {
     if (!idCliente) return;
     const container = document.getElementById('listaEventos');
@@ -359,7 +318,7 @@ async function carregarAgenda() {
                     </div>
                 </div>`;
         });
-    } catch (e) { container.innerHTML = `<p style="color:red; text-align:center;">Erro na agenda.</p>`; }
+    } catch (e) { container.innerHTML = "Erro na agenda."; }
 }
 
 window.abrirInscricao = (id, titulo, data, hora) => {
@@ -405,22 +364,11 @@ async function carregarLeituraDiaria() {
         snap.forEach(doc => { leiturasCache.push({ id: doc.id, ...doc.data() }); });
         leiturasCache.sort((a, b) => (b.dataLeitura > a.dataLeitura ? 1 : -1));
         renderizarLeituras();
-    } catch (e) { container.innerHTML = `<p style="color:red;">Erro ao carregar leituras.</p>`; }
+    } catch (e) { container.innerHTML = "Erro ao carregar."; }
 }
 
 window.filtrarLeitura = (filtro) => {
     filtroLeituraAtual = filtro; 
-    const btnPendentes = document.getElementById('tabPendentes');
-    const btnLidas = document.getElementById('tabLidas');
-    if (btnPendentes && btnLidas) {
-        if (filtro === 'pendentes') {
-            btnPendentes.classList.add('active');
-            btnLidas.classList.remove('active');
-        } else {
-            btnLidas.classList.add('active');
-            btnPendentes.classList.remove('active');
-        }
-    }
     renderizarLeituras();
 };
 
@@ -443,10 +391,6 @@ function renderizarLeituras() {
         const estaLida = lidasStorage.includes(item.id);
         return filtroLeituraAtual === 'lidas' ? estaLida : !estaLida;
     });
-    if (filtradas.length === 0) {
-        container.innerHTML = `<p style="color:#666; text-align:center; padding:20px;">Nenhuma leitura encontrada nesta aba.</p>`;
-        return;
-    }
     filtradas.forEach((dados) => {
         const estaLida = lidasStorage.includes(dados.id);
         container.innerHTML += `
@@ -647,7 +591,7 @@ function escutarMeusPedidosOracao() {
     });
 }
 
-// --- PERFIL ---
+// --- PERFIL (CORRIGIDO) ---
 window.toggleDataCasamento = () => {
     const status = document.getElementById('perfilCasado').value;
     const divCasamento = document.getElementById('divDataCasamento');
@@ -656,11 +600,14 @@ window.toggleDataCasamento = () => {
 
 window.salvarPerfil = async () => {
     const user = auth.currentUser;
-    if (!user) return alert("Você precisa estar logado para salvar.");
+    if (!user) return;
+
+    const btn = document.querySelector('#sessaoPerfil button');
+    const textoOriginal = btn.innerText;
+    btn.innerText = "Salvando...";
 
     const dados = {
         nome: document.getElementById('perfilNome').value,
-        email: document.getElementById('perfilEmail').value,
         whatsapp: document.getElementById('perfilTel').value,
         nascimento: document.getElementById('perfilNascimento').value,
         status: document.getElementById('perfilStatus').value,
@@ -668,7 +615,6 @@ window.salvarPerfil = async () => {
         batismo: document.getElementById('perfilBatismo').value,
         casado: document.getElementById('perfilCasado').value,
         dataCasamento: document.getElementById('perfilDataCasamento').value,
-        idCliente: idCliente,
         ultimaAtualizacao: new Date()
     };
 
@@ -677,25 +623,14 @@ window.salvarPerfil = async () => {
         alert("Perfil atualizado com sucesso!");
         if(document.getElementById('nomeMembro')) document.getElementById('nomeMembro').innerText = dados.nome;
     } catch (error) {
-        console.error("Erro ao salvar perfil:", error);
-        alert("Erro ao salvar informações.");
+        console.error(error);
+        alert("Erro ao salvar perfil.");
+    } finally {
+        btn.innerText = textoOriginal;
     }
 };
 
-window.excluirConta = async () => {
-    if (confirm("Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.")) {
-        const user = auth.currentUser;
-        try {
-            await deleteDoc(doc(db, "usuarios_app", user.uid));
-            await user.delete();
-            alert("Conta excluída com sucesso.");
-            window.location.reload();
-        } catch (error) {
-            alert("Para excluir sua conta, saia e entre novamente para realizar esta ação.");
-        }
-    }
-};
+window.logout = () => { signOut(auth); };
 
-window.logoutCliente = () => { signOut(auth).then(() => { location.reload(); }); };
-window.addEventListener('DOMContentLoaded', inicializarApp);
-
+// Inicializa o App
+inicializarApp();
