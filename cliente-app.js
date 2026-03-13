@@ -75,14 +75,14 @@ window.mostrarSessao = (sessao) => {
 
 // --- 3. LÓGICA CONDICIONAL ---
 window.toggleInscricao = () => {
-    const check = document.getElementById('checkInscricao');
-    const bloco = document.getElementById('blocoInscricao');
+    const check = document.getElementById('checkInscricao') || document.getElementById('eventoRequerInscricao');
+    const bloco = document.getElementById('blocoInscricao') || document.getElementById('campoLinkInscricao');
     if(bloco && check) bloco.style.display = check.checked ? 'block' : 'none';
 };
 
 window.togglePagamento = () => {
-    const check = document.getElementById('checkPago');
-    const bloco = document.getElementById('blocoPagamento');
+    const check = document.getElementById('checkPago') || document.getElementById('eventoEhPago');
+    const bloco = document.getElementById('blocoPagamento') || document.getElementById('campoValorEvento');
     if(bloco && check) bloco.style.display = check.checked ? 'block' : 'none';
 };
 
@@ -233,8 +233,8 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
             imgUrl = await getDownloadURL(snapshot.ref);
         }
 
-        const temInscricao = document.getElementById('checkInscricao')?.checked || false;
-        const eBtnPago = document.getElementById('checkPago')?.checked || false;
+        const temInscricao = document.getElementById('checkInscricao')?.checked || document.getElementById('eventoRequerInscricao')?.checked || false;
+        const eBtnPago = document.getElementById('checkPago')?.checked || document.getElementById('eventoEhPago')?.checked || false;
 
         await addDoc(collection(db, "clientes", idClienteDoc, "eventos"), {
             titulo: document.getElementById('eventoTitulo')?.value || "",
@@ -242,14 +242,19 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
             capa: imgUrl,
             exigeInscricao: temInscricao,
             pago: eBtnPago,
-            linkPagamento: eBtnPago ? document.getElementById('eventoLinkPagamento')?.value : "",
-            perguntasObrigatorias: temInscricao ? ["Nome Completo", "CPF", "Igreja"] : [],
+            linkPagamento: eBtnPago ? (document.getElementById('eventoLinkPagamento')?.value || document.getElementById('eventoValor')?.value) : "",
+            linkInscricao: temInscricao ? document.getElementById('eventoLinkInscricao')?.value : "",
             dataCriacao: serverTimestamp()
         });
 
         alert("Evento publicado!");
         e.target.reset();
-        if(document.getElementById('blocoInscricao')) document.getElementById('blocoInscricao').style.display = 'none';
+        // Esconder blocos condicionais
+        const blocoIns = document.getElementById('blocoInscricao') || document.getElementById('campoLinkInscricao');
+        const blocoPag = document.getElementById('blocoPagamento') || document.getElementById('campoValorEvento');
+        if(blocoIns) blocoIns.style.display = 'none';
+        if(blocoPag) blocoPag.style.display = 'none';
+        
         carregarEventos();
     } catch (err) { console.error(err); alert("Erro ao publicar evento."); }
     finally { if (btn) { btn.disabled = false; btn.innerText = "Publicar Evento"; } }
@@ -257,10 +262,11 @@ document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
 
 function carregarEventos() {
     if (!idClienteDoc) return;
+    const container = document.getElementById('gradeEventos') || document.getElementById('listaEventos');
+    if (!container) return;
+
     const q = query(collection(db, "clientes", idClienteDoc, "eventos"), orderBy("dataCriacao", "desc"));
     onSnapshot(q, (snapshot) => {
-        const container = document.getElementById('gradeEventos');
-        if (!container) return;
         container.innerHTML = "";
         snapshot.forEach((docSnap) => {
             const ev = docSnap.data();
@@ -285,45 +291,34 @@ function carregarEventos() {
     });
 }
 
-window.verInscritos = async (idEvento) => {
-    const tbody = document.getElementById('listaInscritosBody');
-    if (!tbody) return;
-    tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Carregando...</td></tr>";
-    const modal = document.getElementById('modalInscritos');
-    if (modal) modal.style.display = 'flex';
-
-    try {
-        const q = query(collection(db, "clientes", idClienteDoc, "eventos", idEvento, "inscritos"), orderBy("dataInscricao", "desc"));
-        const snap = await getDocs(q);
-        
-        tbody.innerHTML = "";
-        if (snap.empty) {
-            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Nenhum inscrito até o momento.</td></tr>";
-            return;
-        }
-
-        snap.forEach(doc => {
-            const d = doc.data();
-            const dataFormatada = d.dataInscricao ? d.dataInscricao.toDate().toLocaleDateString('pt-BR') : '---';
-            tbody.innerHTML += `
-                <tr>
-                    <td>${d.nome || '---'}</td>
-                    <td>${d.cpf || '---'}</td>
-                    <td>${d.igreja || '---'}</td>
-                    <td>${dataFormatada}</td>
-                </tr>`;
-        });
-    } catch (err) {
-        tbody.innerHTML = "<tr><td colspan='4' style='color: red; text-align:center;'>Erro ao buscar dados.</td></tr>";
-    }
-};
-
-window.fecharModalInscritos = () => { 
-    const modal = document.getElementById('modalInscritos');
-    if (modal) modal.style.display = 'none'; 
-};
-
 // --- 7. GESTÃO DE OFERTAS ---
+function carregarOfertas() {
+    if (!idClienteDoc) return;
+    const q = query(collection(db, "clientes", idClienteDoc, "ofertas"), orderBy("dataCriacao", "desc"));
+    onSnapshot(q, (snapshot) => {
+        const container = document.getElementById('gradeOfertas');
+        if (!container) return;
+        container.innerHTML = "";
+        snapshot.forEach((docSnap) => {
+            const of = docSnap.data();
+            container.innerHTML += `
+                <div class="card-video">
+                    <img src="${of.capa}" class="thumb-video">
+                    <div class="info-video">
+                        <h4>${of.titulo || ''}</h4>
+                        <p style="font-size: 12px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${of.link || ''}</p>
+                        <div class="acoes-video">
+                            <a href="${of.link}" target="_blank" class="btn-edit-sm" style="background: #eab308; text-decoration: none; display: flex; align-items: center; justify-content: center;" title="Testar Link Externo">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <button onclick="window.excluirOferta('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>`;
+        });
+    });
+}
+
 document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSalvarOferta');
@@ -355,41 +350,9 @@ document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     finally { if (btn) { btn.disabled = false; btn.innerText = "Cadastrar Opção de Oferta"; } }
 });
 
-function carregarOfertas() {
-    if (!idClienteDoc) return;
-    const q = query(collection(db, "clientes", idClienteDoc, "ofertas"), orderBy("dataCriacao", "desc"));
-    onSnapshot(q, (snapshot) => {
-        const container = document.getElementById('gradeOfertas');
-        if (!container) return;
-        container.innerHTML = "";
-        snapshot.forEach((docSnap) => {
-            const of = docSnap.data();
-            container.innerHTML += `
-                <div class="card-video">
-                    <img src="${of.capa}" class="thumb-video">
-                    <div class="info-video">
-                        <h4>${of.titulo || ''}</h4>
-                        <p style="font-size: 12px; color: #888; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${of.link || ''}</p>
-                        <div class="acoes-video">
-                            <a href="${of.link}" target="_blank" class="btn-edit-sm" style="background: #eab308; text-decoration: none; display: flex; align-items: center; justify-content: center;" title="Testar Link Externo">
-                                <i class="fas fa-external-link-alt"></i>
-                            </a>
-                            <button onclick="window.excluirOferta('${docSnap.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                </div>`;
-        });
-    });
-}
-
-window.excluirOferta = async (id) => {
-    if (confirm("Deseja remover esta opção de oferta?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "ofertas", id));
-};
-
-// --- 8. GESTÃO DE USUÁRIOS DO APP (MELHORADO) ---
+// --- 8. GESTÃO DE USUÁRIOS DO APP ---
 function carregarUsuariosApp() {
     if (!idClienteDoc) return;
-    // Corrigido para carregar todos os membros vinculados ao cliente
     const q = query(collection(db, "usuarios_app"), where("clienteId", "==", idClienteDoc));
     onSnapshot(q, (snapshot) => {
         const tbody = document.getElementById('tabelaUsuariosBody');
@@ -398,12 +361,9 @@ function carregarUsuariosApp() {
 
         snapshot.forEach((docSnap) => {
             const user = docSnap.data();
-            // Fallback para usuários do Google que podem não ter dataCadastro gravada da mesma forma
             let dataFmt = 'Google/Rede Social';
             if (user.dataCadastro?.toDate) {
                 dataFmt = user.dataCadastro.toDate().toLocaleDateString('pt-BR');
-            } else if (user.dataCadastro) {
-                dataFmt = new Date(user.dataCadastro).toLocaleDateString('pt-BR');
             }
             
             tbody.innerHTML += `
@@ -421,55 +381,7 @@ function carregarUsuariosApp() {
     });
 }
 
-window.abrirModalGerenciarUsuario = (id, nome, email) => {
-    if (document.getElementById('editUserId')) document.getElementById('editUserId').value = id;
-    if (document.getElementById('editUserNome')) document.getElementById('editUserNome').innerText = nome;
-    if (document.getElementById('editUserEmail')) document.getElementById('editUserEmail').innerText = email;
-    if (document.getElementById('modalGerenciarUsuario')) document.getElementById('modalGerenciarUsuario').style.display = 'flex';
-};
-
-window.fecharModalGerenciarUsuario = () => {
-    const modal = document.getElementById('modalGerenciarUsuario');
-    if (modal) modal.style.display = 'none';
-};
-
-window.resetarSenhaUsuario = async () => {
-    const email = document.getElementById('editUserEmail')?.innerText;
-    if (!email) return;
-    try {
-        await sendPasswordResetEmail(auth, email);
-        alert("E-mail de redefinição de senha enviado!");
-    } catch (err) { alert("Erro: " + err.message); }
-};
-
-window.excluirUsuarioApp = async () => {
-    const id = document.getElementById('editUserId')?.value;
-    if (id && confirm("Deseja remover o acesso deste membro?")) {
-        await deleteDoc(doc(db, "usuarios_app", id));
-        alert("Membro removido.");
-        window.fecharModalGerenciarUsuario();
-    }
-};
-
 // --- 9. LEITURA BÍBLICA ---
-document.getElementById('formLeitura')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = e.target.querySelector('button');
-    if (btn) { btn.disabled = true; btn.innerText = "Salvando..."; }
-    try {
-        await addDoc(collection(db, "clientes", idClienteDoc, "leituras"), {
-            dataLeitura: document.getElementById('leituraData')?.value || "",
-            versos: document.getElementById('leituraVersos')?.value || "",
-            texto: document.getElementById('leituraTexto')?.value || "",
-            dataCriacao: serverTimestamp()
-        });
-        alert("Leitura agendada!");
-        e.target.reset();
-        carregarLeituras();
-    } catch (err) { alert("Erro ao salvar leitura."); }
-    finally { if (btn) { btn.disabled = false; btn.innerText = "Agendar Leitura"; } }
-});
-
 function carregarLeituras() {
     if (!idClienteDoc) return;
     const q = query(collection(db, "clientes", idClienteDoc, "leituras"), orderBy("dataLeitura", "desc"));
@@ -495,7 +407,23 @@ function carregarLeituras() {
     });
 }
 
-window.excluirLeitura = async (id) => { if (confirm("Excluir leitura?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "leituras", id)); };
+document.getElementById('formLeitura')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    if (btn) { btn.disabled = true; btn.innerText = "Salvando..."; }
+    try {
+        await addDoc(collection(db, "clientes", idClienteDoc, "leituras"), {
+            dataLeitura: document.getElementById('leituraData')?.value || "",
+            versos: document.getElementById('leituraVersos')?.value || "",
+            texto: document.getElementById('leituraTexto')?.value || "",
+            dataCriacao: serverTimestamp()
+        });
+        alert("Leitura agendada!");
+        e.target.reset();
+        carregarLeituras();
+    } catch (err) { alert("Erro ao salvar leitura."); }
+    finally { if (btn) { btn.disabled = false; btn.innerText = "Agendar Leitura"; } }
+});
 
 // --- 10. GESTÃO DE ORAÇÕES ---
 function carregarOracoes() {
@@ -522,8 +450,6 @@ function carregarOracoes() {
         });
     });
 }
-
-window.excluirOracao = async (id) => { if (confirm("Excluir permanentemente?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id)); };
 
 // --- 11. NOTIFICAÇÕES PUSH ---
 document.getElementById('formPush')?.addEventListener('submit', async (e) => {
@@ -571,12 +497,14 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// EXCLUSÕES GLOBAIS
+// --- FUNÇÕES GLOBAIS (WINDOW) ---
 window.excluirVideo = async (id) => { if (confirm("Excluir vídeo?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "conteudos", id)); };
 window.excluirNoticia = async (id) => { if (confirm("Excluir notícia?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "noticias", id)); };
 window.excluirEvento = async (id) => { if (confirm("Excluir evento?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "eventos", id)); };
+window.excluirOferta = async (id) => { if (confirm("Deseja remover esta opção de oferta?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "ofertas", id)); };
+window.excluirLeitura = async (id) => { if (confirm("Excluir leitura?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "leituras", id)); };
+window.excluirOracao = async (id) => { if (confirm("Excluir permanentemente?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id)); };
 
-// EDIÇÃO E MODAIS
 window.prepararEdicaoVideo = (id, serie, desc) => {
     if (document.getElementById('editVideoId')) document.getElementById('editVideoId').value = id;
     if (document.getElementById('editVideoSerie')) document.getElementById('editVideoSerie').value = serie;
@@ -599,7 +527,16 @@ document.getElementById('formEditarVideo')?.addEventListener('submit', async (e)
     } catch(err) { alert("Erro ao editar."); }
 });
 
-window.abrirModalSenha = () => { if(document.getElementById('modalSenhaCliente')) document.getElementById('modalSenhaCliente').style.display = 'flex'; };
-window.fecharModalSenha = () => { if(document.getElementById('modalSenhaCliente')) document.getElementById('modalSenhaCliente').style.display = 'none'; };
 window.logoutCliente = () => { if(confirm("Sair?")) signOut(auth).then(() => window.location.href = "login-cliente.html"); };
 
+// Adicione as funções de modal faltantes se necessário
+window.abrirModalGerenciarUsuario = (id, nome, email) => {
+    if (document.getElementById('editUserId')) document.getElementById('editUserId').value = id;
+    if (document.getElementById('editUserNome')) document.getElementById('editUserNome').innerText = nome;
+    if (document.getElementById('editUserEmail')) document.getElementById('editUserEmail').innerText = email;
+    if (document.getElementById('modalGerenciarUsuario')) document.getElementById('modalGerenciarUsuario').style.display = 'flex';
+};
+window.fecharModalGerenciarUsuario = () => {
+    const modal = document.getElementById('modalGerenciarUsuario');
+    if (modal) modal.style.display = 'none';
+};
