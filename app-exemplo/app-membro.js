@@ -280,7 +280,7 @@ window.inscreverDepartamento = async (idDep, nomeDep) => {
     } catch (e) { alert("Erro ao realizar inscrição."); }
 };
 
-// --- AGENDA E OUTRAS FUNÇÕES ---
+// --- AGENDA ---
 async function carregarAgenda() {
     if (!idCliente) return;
     const container = document.getElementById('listaEventos');
@@ -535,7 +535,7 @@ window.buscarBiblia = async (tipo, valorManual = null) => {
     } catch (e) { resContainer.innerHTML = "Erro ao buscar."; }
 };
 
-// --- NOTÍCIAS / REFLEXÕES ---
+// --- NOTÍCIAS ---
 async function carregarNoticiasHome() {
     if (!idCliente) return;
     const q = query(collection(db, "clientes", idCliente, "noticias"), orderBy("dataCriacao", "desc"), limit(6));
@@ -563,17 +563,35 @@ window.abrirReflexao = (jsonStr) => {
 
 window.fecharReflexao = () => { document.getElementById('modalReflexao').style.display = 'none'; };
 
-// --- ORAÇÃO ---
+// --- ORAÇÃO (ATUALIZADO COM MENSAGEM DE SUCESSO) ---
 window.enviarPedidoOracao = async () => {
     const nome = document.getElementById('oracaoNome').value;
     const texto = document.getElementById('oracaoTexto').value;
+    const msgSucesso = document.getElementById('statusOracao'); // Elemento para mostrar o texto
+
     if (!nome || !texto) return alert("Preencha tudo.");
+    
     try {
         await addDoc(collection(db, "clientes", idCliente, "pedidos_oracao"), {
             nome, pedido: texto, userId: auth.currentUser.uid, status: "pendente", idCliente, dataCriacao: new Date()
         });
-        alert("Pedido enviado!");
-    } catch (e) { console.error(e); }
+        
+        // Limpa os campos após o envio
+        document.getElementById('oracaoTexto').value = "";
+        
+        // Mostra a mensagem de sucesso
+        if(msgSucesso) {
+            msgSucesso.innerText = "Sua oração foi enviada!";
+            msgSucesso.style.display = "block";
+            msgSucesso.style.color = "var(--cor-primaria)";
+            
+            // Esconde a mensagem após 5 segundos
+            setTimeout(() => { msgSucesso.style.display = "none"; }, 5000);
+        }
+    } catch (e) { 
+        console.error(e); 
+        alert("Erro ao enviar pedido.");
+    }
 };
 
 function escutarMeusPedidosOracao() {
@@ -591,7 +609,7 @@ function escutarMeusPedidosOracao() {
     });
 }
 
-// --- PERFIL (CORRIGIDO) ---
+// --- PERFIL ---
 window.toggleDataCasamento = () => {
     const status = document.getElementById('perfilCasado').value;
     const divCasamento = document.getElementById('divDataCasamento');
