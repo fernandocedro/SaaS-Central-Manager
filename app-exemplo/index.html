@@ -107,8 +107,7 @@
 
         <section id="sessaoAgenda" style="display: none; padding: 15px;">
             <h3 class="titulo-bronze">Agenda de Eventos</h3>
-            <div id="listaEventos" class="agenda-container">
-                </div>
+            <div id="listaEventos" class="agenda-container"></div>
         </section>
 
         <section id="sessaoBiblia" class="home-section" style="display: none;">
@@ -134,7 +133,6 @@
         
         <section id="sessaoLeitura" style="display: none; padding: 15px;">
             <h3 class="titulo-bronze">Leitura Diária</h3>
-            
             <div class="container-filtros-leitura">
                 <button onclick="window.filtrarLeitura('pendentes')" id="tabPendentes" class="btn-sub-tab active">
                     <i class="fas fa-book"></i> Disponíveis
@@ -143,7 +141,6 @@
                     <i class="fas fa-check-circle"></i> Lidas
                 </button>
             </div>
-
             <div id="listaLeituraContainer"></div>
         </section>
 
@@ -153,26 +150,19 @@
                 <h2 style="color: #fff;">Pedido de Oração</h2>
                 <p style="color: #bbb; font-size: 0.9rem;">Compartilhe seu fardo conosco. Estaremos orando por você.</p>
             </div>
-
             <div style="background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #333;">
                 <div style="margin-bottom: 15px;">
                     <label style="color: var(--cor-primaria); display: block; margin-bottom: 8px; font-weight: bold;">Seu Nome</label>
-                    <input type="text" id="oracaoNome" placeholder="Digite seu nome completo" 
-                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; outline: none;">
+                    <input type="text" id="oracaoNome" placeholder="Digite seu nome completo" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; outline: none;">
                 </div>
-
                 <div style="margin-bottom: 20px;">
                     <label style="color: var(--cor-primaria); display: block; margin-bottom: 8px; font-weight: bold;">Motivo da Oração</label>
-                    <textarea id="oracaoTexto" rows="5" placeholder="Escreva aqui seu pedido..." 
-                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; outline: none; resize: none;"></textarea>
+                    <textarea id="oracaoTexto" rows="5" placeholder="Escreva aqui seu pedido..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; outline: none; resize: none;"></textarea>
                 </div>
-
-                <button id="btnEnviarOracao" onclick="window.enviarPedidoOracao()" 
-                    style="width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--cor-primaria); color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem;">
+                <button id="btnEnviarOracao" onclick="window.enviarPedidoOracao()" style="width: 100%; padding: 15px; border-radius: 10px; border: none; background: var(--cor-primaria); color: white; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1rem;">
                     <i class="fas fa-paper-plane"></i> Enviar Pedido
                 </button>
-
-                <div id="msgSucessoOracao" style="display: none; background: #1b4332; color: #d8f3dc; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #2d6a4f;">
+                <div id="msgSucessoOracao" style="display: none; background: #1b4332; color: #d8f3dc; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #2d6a4f; margin-top: 15px;">
                     <i class="fas fa-check-circle"></i> Pedido enviado com sucesso! Deus te abençoe.
                 </div>
             </div>
@@ -186,12 +176,10 @@
         <section id="sessaoAnotacoes" class="home-section" style="display: none; padding: 10px;">
             <h3 class="titulo-bronze">Minhas Anotações</h3>
             <div id="gradeAnotacoes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;"></div>
-
             <button onclick="window.abrirModalNota()" style="position: fixed; bottom: 85px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--cor-primaria); color: white; border: none; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 100; cursor: pointer;">
                 <i class="fas fa-plus"></i>
             </button>
         </section>
-
     </main>
 
     <div id="modalNota" class="modal-premium" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; align-items: center; justify-content: center;">
@@ -199,12 +187,27 @@
             <input type="hidden" id="notaId"> 
             <input type="text" id="notaTitulo" placeholder="Título da Anotação" style="width: 100%; background: #222; border: 1px solid #444; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 1.1rem; outline: none;">
             <textarea id="notaTexto" placeholder="Escreva aqui sua reflexão..." style="width: 100%; height: 200px; background: #222; border: 1px solid #444; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px; resize: none; font-family: sans-serif; outline: none;"></textarea>
-            
             <div style="display: flex; gap: 10px;">
                 <button onclick="window.salvarNota()" style="flex: 2; background: var(--cor-primaria); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer;">Salvar</button>
                 <button id="btnExcluirNota" onclick="window.excluirNota()" style="flex: 1; background: #c0392b; color: white; border: none; padding: 12px; border-radius: 8px; display: none; cursor: pointer;">Excluir</button>
                 <button onclick="window.fecharModalNota()" style="flex: 1; background: #444; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer;">Cancelar</button>
             </div>
+        </div>
+    </div>
+
+    <div id="modalInscricao" class="modal-premium" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #1a1a1a; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; border: 1px solid #333;">
+            <h2 id="ins_evento_titulo" style="color: var(--cor-primaria); margin-bottom: 5px; font-size: 1.4rem;"></h2>
+            <p style="color: #888; margin-bottom: 20px; font-size: 0.9rem;">Confirme seus dados para a inscrição:</p>
+            
+            <input type="hidden" id="ins_evento_id">
+            
+            <input type="text" id="ins_nome" placeholder="Nome" style="width: 100%; padding: 12px; border-radius: 8px; background: #222; color: #fff; border: 1px solid #444; margin-bottom: 10px; outline: none;">
+            <input type="text" id="ins_sobrenome" placeholder="Sobrenome" style="width: 100%; padding: 12px; border-radius: 8px; background: #222; color: #fff; border: 1px solid #444; margin-bottom: 10px; outline: none;">
+            <input type="text" id="ins_cpf" placeholder="CPF (apenas números)" style="width: 100%; padding: 12px; border-radius: 8px; background: #222; color: #fff; border: 1px solid #444; margin-bottom: 20px; outline: none;">
+            
+            <button onclick="window.confirmarInscricao()" style="width: 100%; background: var(--cor-primaria); color: #fff; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1rem;">Confirmar Inscrição</button>
+            <button onclick="window.fecharInscricao()" style="width: 100%; background: transparent; color: #888; border: none; padding: 10px; margin-top: 10px; cursor: pointer;">Cancelar</button>
         </div>
     </div>
 
@@ -266,9 +269,11 @@
             const modRef = document.getElementById('modalReflexao');
             const modVid = document.getElementById('modalVideo');
             const modNot = document.getElementById('modalNota');
+            const modIns = document.getElementById('modalInscricao');
             if (event.target == modRef) window.fecharReflexao();
             if (event.target == modVid) window.fecharVideo();
             if (event.target == modNot) window.fecharModalNota();
+            if (event.target == modIns) window.fecharInscricao();
         }
     </script>
 </body>
