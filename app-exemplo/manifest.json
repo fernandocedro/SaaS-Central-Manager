@@ -1,7 +1,7 @@
 {
-  "name": "Meu App de Igreja",
+  "name": "Nome da sua Igreja",
   "short_name": "IgrejaApp",
-  "start_url": "index.html",
+  "start_url": "index.html?id=jLO6R7R15iDKfPg25VTC",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#d4a373",
@@ -9,6 +9,11 @@
     {
       "src": "logo.png",
       "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo-512.png",
+      "sizes": "512x512",
       "type": "image/png"
     }
   ]
