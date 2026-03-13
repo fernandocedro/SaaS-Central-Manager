@@ -319,19 +319,25 @@ body {
 
 /* Card ajustado para 2 por linha */
 /* Container que segura as reflexões */
+/* O CONTAINER PAI: Força a grade e remove qualquer comportamento de lista */
 #gradeNoticias {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important; /* Força 2 colunas iguais sempre */
-    gap: 10px !important;
-    padding: 10px !important;
+    grid-template-columns: repeat(2, 1fr) !important; /* Força 2 colunas de tamanho igual */
+    gap: 12px !important;
+    padding: 12px !important;
     width: 100% !important;
+    max-width: 100vw !important; /* Garante que não passe da largura do celular */
     box-sizing: border-box !important;
-    align-items: start;
+    overflow-x: hidden !important; /* Mata o scroll horizontal se houver */
+    flex-wrap: wrap !important; /* Caso ele tente agir como flex */
 }
 
-/* O Card */
+/* O CARD: Remove larguras fixas e obriga a seguir a coluna do grid */
 .card-reflexao-premium {
-    width: 100% !important; /* Ele vai obedecer ao tamanho da coluna do Grid */
+    width: 100% !important; 
+    min-width: 0 !important; /* IMPORTANTE: Permite que o card diminua para caber na coluna */
+    max-width: 100% !important;
+    flex: none !important; /* Desativa comportamentos de flexbox anteriores */
     background: #111;
     border-radius: 12px;
     overflow: hidden;
@@ -341,33 +347,26 @@ body {
     flex-direction: column;
 }
 
-/* A Imagem */
+/* A IMAGEM: Mantém a proporção sem esticar o card */
 .card-reflexao-premium img {
     width: 100% !important;
-    height: 100px !important; /* Altura fixa para não variar entre os cards */
+    height: 105px !important; /* Altura fixa para manter o padrão */
     object-fit: cover !important;
     display: block;
 }
 
-/* O Título */
+/* O TÍTULO: Ajuste fino para não quebrar a grade */
 .card-reflexao-premium .video-info {
-    padding: 8px;
-    font-size: 0.8rem;
+    padding: 8px !important;
+    font-size: 0.8rem !important;
+    line-height: 1.2 !important;
     color: #fff;
     text-align: center;
-    /* Impede que títulos muito longos empurrem o layout */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-}
-
-/* Estilo do título dentro do card (se houver) */
-.video-info {
-    padding: 8px;
-    font-size: 0.85rem;
-    color: #fff;
-    text-align: center;
+    height: 40px; /* Garante que todos os cards tenham a mesma altura de texto */
 }
 
 
@@ -634,6 +633,7 @@ body {
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 
         }
+
 
 
 
