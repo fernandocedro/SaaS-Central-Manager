@@ -327,16 +327,43 @@ async function carregarLeituraDiaria() {
     } catch (e) { container.innerHTML = `<p style="color:red;">Erro ao carregar leituras.</p>`; }
 }
 
+// ADICIONE ESTA FUNÇÃO AQUI ABAIXO:
+window.filtrarLeitura = (filtro) => {
+    filtroLeituraAtual = filtro; // 'pendentes' ou 'lidas'
+    
+    // Atualiza o visual dos botões (tabs)
+    const btnPendentes = document.getElementById('tabPendentes');
+    const btnLidas = document.getElementById('tabLidas');
+    
+    if (filtro === 'pendentes') {
+        btnPendentes.classList.add('active');
+        btnLidas.classList.remove('active');
+    } else {
+        btnLidas.classList.add('active');
+        btnPendentes.classList.remove('active');
+    }
+    
+    // Re-renderiza a lista com o novo filtro
+    renderizarLeituras();
+};
+
 function renderizarLeituras() {
     const container = document.getElementById('listaLeituraContainer');
     if(!container) return;
     const chaveLidos = `leituras_lidas_${idCliente}`;
     const lidasStorage = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
     container.innerHTML = "";
+    
     const filtradas = leiturasCache.filter(item => {
         const estaLida = lidasStorage.includes(item.id);
         return filtroLeituraAtual === 'lidas' ? estaLida : !estaLida;
     });
+
+    if (filtradas.length === 0) {
+        container.innerHTML = `<p style="color:#666; text-align:center; padding:20px;">Nenhuma leitura encontrada nesta aba.</p>`;
+        return;
+    }
+
     filtradas.forEach((dados) => {
         const estaLida = lidasStorage.includes(dados.id);
         container.innerHTML += `
@@ -349,14 +376,6 @@ function renderizarLeituras() {
             </div>`;
     });
 }
-
-window.toggleLido = (id) => {
-    const chaveLidos = `leituras_lidas_${idCliente}`;
-    let lidas = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
-    lidas = lidas.includes(id) ? lidas.filter(i => i !== id) : [...lidas, id];
-    localStorage.setItem(chaveLidos, JSON.stringify(lidas));
-    renderizarLeituras(); 
-};
 
 // --- VÍDEOS ---
 function extrairVideoID(url) {
@@ -552,3 +571,4 @@ function escutarMeusPedidosOracao() {
 
 window.logoutCliente = () => { signOut(auth).then(() => { location.reload(); }); };
 window.addEventListener('DOMContentLoaded', inicializarApp);
+
