@@ -250,7 +250,7 @@
                 <div id="listaEventos" class="grid-conteudo" style="margin-top: 30px;"></div>
             </section>
 
-            <section id="secaoOfertas" class="main-card" style="display: none;">
+           <section id="secaoOfertas" class="main-card" style="display: none;">
                 <div class="card-header">
                     <h3><i class="fas fa-hand-holding-heart"></i> Ofertas e Dízimos</h3>
                 </div>
@@ -262,6 +262,10 @@
                     <div class="input-group">
                         <label>Link de Destino</label>
                         <input type="url" id="ofertaLink" placeholder="Link do MercadoPago, WhatsApp ou Site" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Imagem da Oferta (Thumbnail)</label>
+                        <input type="file" id="ofertaImg" class="custom-file-input" accept="image/*">
                     </div>
                     <button type="submit" class="btn-submit">Adicionar Opção</button>
                 </form>
@@ -341,3 +345,4 @@
     <script type="module" src="cliente-app.js"></script>
 </body>
 </html>
+
