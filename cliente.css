@@ -100,6 +100,7 @@ html, body {
 .sidebar-header {
     padding: 15px;
     text-align: center;
+    flex-shrink: 0;
 }
 
 .sidebar-header img {
@@ -116,6 +117,20 @@ html, body {
     list-style: none;
     padding: 0;
     flex-grow: 1;
+
+    overflow-y: auto;          /* Ativa o scroll vertical */
+    overflow-x: hidden;        /* Esconde scroll horizontal */
+    scrollbar-width: thin;     /* Deixa a barra fina no Firefox */
+    scrollbar-color: var(--cor-primaria) transparent; /* Cor no Firefox */
+}
+
+.menu-items::-webkit-scrollbar {
+    width: 5px;
+}
+
+.menu-items::-webkit-scrollbar-thumb {
+    background-color: var(--cor-primaria);
+    border-radius: 10px;
 }
 
 .menu-items li a {
@@ -191,6 +206,7 @@ html, body {
     display: flex; 
     flex-direction: column;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 .btn-perfil, .btn-sair {
