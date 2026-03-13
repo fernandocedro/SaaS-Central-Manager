@@ -402,39 +402,41 @@ body {
     box-sizing: border-box !important;
 }
 
-/* O Card de vídeo dentro desta grade */
+/* --- CORREÇÃO DEFINITIVA DA GRADE DE VÍDEOS --- */
+
+#gradeVideosCompleta {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; /* Força 2 colunas iguais */
+    gap: 12px !important;
+    padding: 15px !important;
+    align-items: start !important;
+}
+
+/* Ajuste do Card de Vídeo */
 #gradeVideosCompleta .card-video-premium {
     width: 100% !important;
-    min-width: 0 !important;
-    background: #111;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #333;
-    display: flex;
-    flex-direction: column;
-    cursor: pointer;
+    background: #111 !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    border: 1px solid #333 !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
-/* A Imagem do vídeo (Thumbnail) */
+/* Ajuste da Imagem dentro do vídeo */
 #gradeVideosCompleta .card-video-premium img {
     width: 100% !important;
-    height: 105px !important; /* Mantém a altura igual à das reflexões para harmonia */
+    height: 100px !important; /* Altura fixa para caber 2 por linha */
     object-fit: cover !important;
-    display: block;
 }
 
-/* O Título do vídeo */
-#gradeVideosCompleta .card-video-premium .video-info {
-    padding: 10px !important;
+/* Ajuste do Texto (que está aparecendo embaixo na sua foto) */
+#gradeVideosCompleta .video-info {
+    padding: 8px !important;
     font-size: 0.8rem !important;
-    color: #fff;
-    text-align: center;
-    line-height: 1.2;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    height: 40px; /* Alinha todos os cards horizontalmente */
+    color: #fff !important;
+    text-align: center !important;
+    min-height: 40px !important;
 }
 
 
@@ -701,6 +703,7 @@ body {
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 
         }
+
 
 
 
