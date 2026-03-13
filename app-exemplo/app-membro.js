@@ -346,6 +346,21 @@ window.filtrarLeitura = (filtro) => {
     renderizarLeituras();
 };
 
+// Tornamos a função global explicitamente antes de ser usada
+window.toggleLido = (id) => {
+    const chaveLidos = `leituras_lidas_${idCliente}`;
+    let lidas = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
+    
+    if (lidas.includes(id)) {
+        lidas = lidas.filter(i => i !== id);
+    } else {
+        lidas.push(id);
+    }
+    
+    localStorage.setItem(chaveLidos, JSON.stringify(lidas));
+    renderizarLeituras(); 
+};
+
 function renderizarLeituras() {
     const container = document.getElementById('listaLeituraContainer');
     if(!container) return;
@@ -375,20 +390,6 @@ function renderizarLeituras() {
             </div>`;
     });
 }
-
-window.toggleLido = (id) => {
-    const chaveLidos = `leituras_lidas_${idCliente}`;
-    let lidas = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
-    
-    if (lidas.includes(id)) {
-        lidas = lidas.filter(i => i !== id);
-    } else {
-        lidas.push(id);
-    }
-    
-    localStorage.setItem(chaveLidos, JSON.stringify(lidas));
-    renderizarLeituras(); 
-};
 
 // --- VÍDEOS ---
 function extrairVideoID(url) {
@@ -583,4 +584,5 @@ function escutarMeusPedidosOracao() {
 
 window.logoutCliente = () => { signOut(auth).then(() => { location.reload(); }); };
 window.addEventListener('DOMContentLoaded', inicializarApp);
+
 
