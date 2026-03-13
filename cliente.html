@@ -146,28 +146,28 @@
                 <div id="gradeNoticias" class="grid-conteudo"></div>
             </section>
 
-            <section id="secaoLeitura" class="main-card" style="display: none;">
-                <div class="card-header">
-                    <h3><i class="fas fa-book-open"></i> Plano de Leitura Bíblica</h3>
-                </div>
-                <form id="formLeitura" class="form-style">
-                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
-                        <div class="input-group">
-                            <label>Data</label>
-                            <input type="date" id="leituraData" required>
+           <section id="secaoLeitura" class="main-card" style="display: none;">
+                    <div class="card-header">
+                        <h3><i class="fas fa-book-open"></i> Plano de Leitura Bíblica</h3>
+                    </div>
+                    <form id="formLeitura" class="form-style">
+                        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 15px;">
+                            <div class="input-group">
+                                <label>Data</label>
+                                <input type="date" id="leituraData" required>
+                            </div>
+                            <div class="input-group">
+                                <label>Versículos</label>
+                                <input type="text" id="leituraVersos" placeholder="Ex: Salmos 23:1-6" required>
+                            </div>
                         </div>
                         <div class="input-group">
-                            <label>Versículos</label>
-                            <input type="text" id="leituraVersos" placeholder="Ex: Salmos 23:1-6" required>
+                            <label>Reflexão Diária</label>
+                            <textarea id="leituraTexto" rows="4" placeholder="Opcional..."></textarea>
                         </div>
-                    </div>
-                    <div class="input-group">
-                        <label>Reflexão Diária</label>
-                        <textarea id="leituraTexto" rows="4" placeholder="Opcional..."></textarea>
-                    </div>
-                   <button type="button" onclick="window.salvarLeitura()">Salvar Leitura</button>
-                </form>
-                <div id="gradeLeituras" class="grid-conteudo" style="margin-top: 20px;"></div>
+                        <button type="button" onclick="window.salvarLeitura()">Salvar Leitura</button>
+                    </form>
+                    <div id="gradeLeituras" class="grid-conteudo" style="margin-top: 20px;"></div>
             </section>
 
             <section id="secaoOracoes" class="main-card" style="display: none;">
@@ -377,4 +377,5 @@
     <script type="module" src="cliente-app.js"></script>
 </body>
 </html>
+
 
