@@ -3,7 +3,7 @@ import { getFirestore, doc, getDoc, collection, addDoc, query, where, getDocs, s
 import { getAuth, onAuthStateChanged, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// 1. Configuração do Firebase
+// --- 1. CONFIGURAÇÃO DO FIREBASE ---
 const firebaseConfig = {
     apiKey: "AIzaSyDX-zzuYHQ6HQce12CPSke38MuP8k63Zt8",
     authDomain: "saas-central-manager.firebaseapp.com",
@@ -21,22 +21,20 @@ const storage = getStorage(app);
 let idClienteDoc = null; 
 let todosOsVideos = []; 
 
-// --- FUNÇÃO DE APOIO: COMPRESSÃO DE IMAGENS ---
+// --- FUNÇÃO DE APOIO: COMPRESSÃO E ESCAPE ---
 async function otimizarImagem(arquivo) {
     if (!arquivo || !arquivo.type.startsWith('image/')) return arquivo;
-    const opcoes = {
-        maxSizeMB: 0.8, 
-        maxWidthOrHeight: 1024,
-        useWebWorker: true
-    };
+    const opcoes = { maxSizeMB: 0.8, maxWidthOrHeight: 1024, useWebWorker: true };
     try {
-        // @ts-ignore (Carregado via CDN no HTML: browser-image-compression)
+        // @ts-ignore (Carregado via CDN no HTML)
         return await imageCompression(arquivo, opcoes);
     } catch (error) {
-        console.error("Erro na compressão, enviando original:", error);
+        console.error("Erro na compressão:", error);
         return arquivo;
     }
 }
+
+const esc = (str) => str ? str.replace(/'/g, "\\'").replace(/"/g, "&quot;") : "";
 
 // --- 2. NAVEGAÇÃO ENTRE ABAS ---
 window.mostrarSessao = (sessao) => {
@@ -115,9 +113,6 @@ function renderizarGradeVideos(lista) {
 
     lista.forEach((video) => {
         const thumb = video.thumbnail || 'https://placehold.co/300x150/222/white?text=Sem+Thumbnail';
-        const serieLimpa = (video.serie || "Sem Título").replace(/'/g, "\\'");
-        const descLimpa = (video.descricao || "").replace(/'/g, "\\'");
-        
         container.innerHTML += `
             <div class="card-video">
                 <img src="${thumb}" class="thumb-video">
@@ -126,7 +121,7 @@ function renderizarGradeVideos(lista) {
                     <h4>${video.serie || 'Sem Título'}</h4>
                     <p>${video.descricao || ''}</p>
                     <div class="acoes-video">
-                        <button onclick="window.prepararEdicaoVideo('${video.id}', '${serieLimpa}', '${descLimpa}')" class="btn-edit-sm"><i class="fas fa-edit"></i></button>
+                        <button onclick="window.prepararEdicaoVideo('${video.id}', '${esc(video.serie)}', '${esc(video.descricao)}')" class="btn-edit-sm"><i class="fas fa-edit"></i></button>
                         <button onclick="window.excluirVideo('${video.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
@@ -145,10 +140,9 @@ document.getElementById('formConteudo')?.addEventListener('submit', async (e) =>
     try {
         let thumbUrl = "";
         if (thumbFile) {
-            btn.innerText = "Otimizando Imagem...";
+            btn.innerText = "Otimizando...";
             const arquivoOtimizado = await otimizarImagem(thumbFile);
             const storageRef = ref(storage, `clientes/${idClienteDoc}/conteudos/${Date.now()}_${thumbFile.name}`);
-            btn.innerText = "Enviando...";
             const snapshot = await uploadBytes(storageRef, arquivoOtimizado);
             thumbUrl = await getDownloadURL(snapshot.ref);
         }
@@ -392,13 +386,10 @@ window.excluirOferta = async (id) => {
     if (confirm("Deseja remover esta opção de oferta?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "ofertas", id));
 };
 
-// --- 8. GESTÃO DE USUÁRIOS DO APP (CORRIGIDO) ---
+// --- 8. GESTÃO DE USUÁRIOS DO APP ---
 function carregarUsuariosApp() {
     if (!idClienteDoc) return;
-    
-    // Removido o orderBy caso o índice ainda não tenha sido criado no Firebase Console
     const q = query(collection(db, "usuarios_app"), where("clienteId", "==", idClienteDoc));
-    
     onSnapshot(q, (snapshot) => {
         const tbody = document.getElementById('tabelaUsuariosBody');
         if (!tbody) return;
@@ -406,10 +397,7 @@ function carregarUsuariosApp() {
 
         snapshot.forEach((docSnap) => {
             const user = docSnap.data();
-            const dataFmt = user.dataCadastro ? 
-                (user.dataCadastro.toDate ? user.dataCadastro.toDate().toLocaleDateString('pt-BR') : '---') 
-                : '---';
-            const nomeLimpo = (user.nome || "Membro").replace(/'/g, "\\'");
+            const dataFmt = user.dataCadastro?.toDate ? user.dataCadastro.toDate().toLocaleDateString('pt-BR') : '---';
             
             tbody.innerHTML += `
                 <tr>
@@ -417,7 +405,7 @@ function carregarUsuariosApp() {
                     <td>${user.email || ''}</td>
                     <td>${dataFmt}</td>
                     <td>
-                        <button onclick="window.abrirModalGerenciarUsuario('${docSnap.id}', '${nomeLimpo}', '${user.email}')" class="btn-edit-sm">
+                        <button onclick="window.abrirModalGerenciarUsuario('${docSnap.id}', '${esc(user.nome)}', '${user.email}')" class="btn-edit-sm">
                             <i class="fas fa-user-shield"></i> Gerenciar
                         </button>
                     </td>
@@ -427,15 +415,10 @@ function carregarUsuariosApp() {
 }
 
 window.abrirModalGerenciarUsuario = (id, nome, email) => {
-    const elId = document.getElementById('editUserId');
-    const elNome = document.getElementById('editUserNome');
-    const elEmail = document.getElementById('editUserEmail');
-    const modal = document.getElementById('modalGerenciarUsuario');
-
-    if (elId) elId.value = id;
-    if (elNome) elNome.innerText = nome;
-    if (elEmail) elEmail.innerText = email;
-    if (modal) modal.style.display = 'flex';
+    if (document.getElementById('editUserId')) document.getElementById('editUserId').value = id;
+    if (document.getElementById('editUserNome')) document.getElementById('editUserNome').innerText = nome;
+    if (document.getElementById('editUserEmail')) document.getElementById('editUserEmail').innerText = email;
+    if (document.getElementById('modalGerenciarUsuario')) document.getElementById('modalGerenciarUsuario').style.display = 'flex';
 };
 
 window.fecharModalGerenciarUsuario = () => {
@@ -461,7 +444,7 @@ window.excluirUsuarioApp = async () => {
     }
 };
 
-// --- LEITURA BÍBLICA ---
+// --- 9. LEITURA BÍBLICA ---
 document.getElementById('formLeitura')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
@@ -507,16 +490,14 @@ function carregarLeituras() {
 
 window.excluirLeitura = async (id) => { if (confirm("Excluir leitura?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "leituras", id)); };
 
-// --- GESTÃO DE ORAÇÕES ---
+// --- 10. GESTÃO DE ORAÇÕES ---
 function carregarOracoes() {
     if (!idClienteDoc) return;
     const tbody = document.getElementById('tabelaOracoesBody');
     if (!tbody) return;
-
     const q = query(collection(db, "clientes", idClienteDoc, "pedidos_oracao"), orderBy("dataCriacao", "desc"));
-    
     onSnapshot(q, (snapshot) => {
-        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center; padding: 20px; color: #888;'>Nenhum pedido recebido.</td></tr>" : "";
+        tbody.innerHTML = snapshot.empty ? "<tr><td colspan='4' style='text-align:center;'>Nenhum pedido recebido.</td></tr>" : "";
         snapshot.forEach((docSnap) => {
             const ora = docSnap.data();
             let dataFmt = '---';
@@ -537,7 +518,7 @@ function carregarOracoes() {
 
 window.excluirOracao = async (id) => { if (confirm("Excluir permanentemente?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "pedidos_oracao", id)); };
 
-// --- NOTIFICAÇÕES PUSH ---
+// --- 11. NOTIFICAÇÕES PUSH ---
 document.getElementById('formPush')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!confirm("Enviar notificação para todos?")) return;
@@ -555,7 +536,7 @@ document.getElementById('formPush')?.addEventListener('submit', async (e) => {
     finally { if (btn) { btn.disabled = false; btn.innerText = "Disparar Notificação"; } }
 });
 
-// --- 9. CORE (AUTH E IDENTIDADE) ---
+// --- 12. CORE (AUTH E IDENTIDADE) ---
 async function buscarDadosCliente(userUid) {
     const q = query(collection(db, "clientes"), where("uid", "==", userUid));
     const querySnapshot = await getDocs(q);
@@ -583,21 +564,17 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// FUNÇÕES GLOBAIS DE EXCLUSÃO
+// EXCLUSÕES GLOBAIS
 window.excluirVideo = async (id) => { if (confirm("Excluir vídeo?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "conteudos", id)); };
 window.excluirNoticia = async (id) => { if (confirm("Excluir notícia?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "noticias", id)); };
 window.excluirEvento = async (id) => { if (confirm("Excluir evento?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "eventos", id)); };
 
 // EDIÇÃO E MODAIS
 window.prepararEdicaoVideo = (id, serie, desc) => {
-    const elId = document.getElementById('editVideoId');
-    const elSerie = document.getElementById('editVideoSerie');
-    const elDesc = document.getElementById('editVideoDesc');
-    const modal = document.getElementById('modalEditarVideo');
-    if (elId) elId.value = id;
-    if (elSerie) elSerie.value = serie;
-    if (elDesc) elDesc.value = desc;
-    if (modal) modal.style.display = 'flex';
+    if (document.getElementById('editVideoId')) document.getElementById('editVideoId').value = id;
+    if (document.getElementById('editVideoSerie')) document.getElementById('editVideoSerie').value = serie;
+    if (document.getElementById('editVideoDesc')) document.getElementById('editVideoDesc').value = desc;
+    if (document.getElementById('modalEditarVideo')) document.getElementById('modalEditarVideo').style.display = 'flex';
 };
 
 window.fecharModalEdicao = () => { if(document.getElementById('modalEditarVideo')) document.getElementById('modalEditarVideo').style.display = 'none'; };
