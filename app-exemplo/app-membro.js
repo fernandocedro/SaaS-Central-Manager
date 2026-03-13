@@ -225,24 +225,35 @@ async function carregarDepartamentos() {
     const container = document.getElementById('listaDepartamentosContainer');
     if (!container) return;
     container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando departamentos...</p>`;
+    
     try {
         const colRef = collection(db, "clientes", idCliente, "departamentos");
         const snap = await getDocs(colRef);
+        
         if (snap.empty) {
             container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhum departamento cadastrado.</p>`;
             return;
         }
+        
         container.innerHTML = "";
-        snap.forEach((doc) => {
-            const dep = doc.data();
+        snap.forEach((docSnapshot) => {
+            const dep = docSnapshot.data();
+            const idDep = docSnapshot.id; // Pegamos o ID do departamento
+
             container.innerHTML += `
-                <div class="card-departamento" style="background:#1a1a1a; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #333; display:flex; align-items:center; gap:15px;">
-                    ${dep.imagem ? `<img src="${dep.imagem}" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">` : `<div style="width:60px; height:60px; border-radius:50%; background:#333; display:flex; align-items:center; justify-content:center;"><i class="fas fa-users" style="color:#666;"></i></div>`}
-                    <div style="flex:1;">
-                        <h4 style="color:#fff; margin:0 0 5px 0;">${dep.nome || 'Departamento'}</h4>
-                        <p style="color:#aaa; font-size:0.85rem; margin:0;">${dep.descricao || ''}</p>
-                        ${dep.lider ? `<p style="color:var(--cor-primaria); font-size:0.75rem; margin-top:5px; font-weight:bold;">Líder: ${dep.lider}</p>` : ''}
+                <div class="card-departamento" style="background:#1a1a1a; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #333; display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        ${dep.imagem ? `<img src="${dep.imagem}" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">` : `<div style="width:60px; height:60px; border-radius:50%; background:#333; display:flex; align-items:center; justify-content:center;"><i class="fas fa-users" style="color:#666;"></i></div>`}
+                        <div style="flex:1;">
+                            <h4 style="color:#fff; margin:0 0 5px 0;">${dep.nome || 'Departamento'}</h4>
+                            <p style="color:#aaa; font-size:0.85rem; margin:0;">${dep.descricao || ''}</p>
+                            ${dep.lider ? `<p style="color:var(--cor-primaria); font-size:0.75rem; margin-top:5px; font-weight:bold;">Líder: ${dep.lider}</p>` : ''}
+                        </div>
                     </div>
+                    <button onclick="window.inscreverDepartamento('${idDep}', '${dep.nome}')" 
+                            style="width:100%; background:var(--cor-primaria); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">
+                        Participar deste Departamento
+                    </button>
                 </div>`;
         });
     } catch (e) { 
@@ -250,6 +261,36 @@ async function carregarDepartamentos() {
         container.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar departamentos.</p>`; 
     }
 }
+
+
+// --- FAZ FUNCIONAR A FUNÇÃO ---
+window.inscreverDepartamento = async (idDep, nomeDep) => {
+    const user = auth.currentUser;
+    if (!user) {
+        alert("Você precisa estar logado para se inscrever.");
+        return;
+    }
+
+    if (!confirm(`Deseja solicitar participação no departamento: ${nomeDep}?`)) return;
+
+    try {
+        // Criamos uma inscrição na subcoleção "membros" dentro do departamento
+        const membroRef = doc(db, "clientes", idCliente, "departamentos", idDep, "membros", user.uid);
+        
+        await setDoc(membroRef, {
+            nome: user.displayName || "Membro",
+            email: user.email,
+            uid: user.uid,
+            dataInscricao: new Date(),
+            status: "pendente" // O administrador pode aprovar depois
+        });
+
+        alert("Solicitação enviada com sucesso!");
+    } catch (e) {
+        console.error("Erro ao se inscrever:", e);
+        alert("Erro ao realizar inscrição. Verifique suas permissões.");
+    }
+};
 
 // --- OFERTAS E DÍZIMOS ---
 async function carregarOfertas() {
@@ -657,3 +698,4 @@ window.excluirConta = async () => {
 
 window.logoutCliente = () => { signOut(auth).then(() => { location.reload(); }); };
 window.addEventListener('DOMContentLoaded', inicializarApp);
+
