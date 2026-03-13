@@ -150,9 +150,7 @@ async function inicializarApp() {
                 const userData = userDoc.data();
                 const nomeFinal = userData.nome || user.displayName || "Membro";
                 if(nomeDisplay) nomeDisplay.innerText = nomeFinal;
-                
                 if(document.getElementById('ins_nome')) document.getElementById('ins_nome').value = userData.nome || "";
-
                 if(userData.fotoUrl || user.photoURL) {
                     const urlFinal = userData.fotoUrl || user.photoURL;
                     if(fotoDisplay) fotoDisplay.src = urlFinal;
@@ -203,34 +201,61 @@ window.mostrarSessao = (aba) => {
     } else if (aba === 'agenda') {
         carregarAgenda();
     } else if (aba === 'ofertas') {
-        carregarOfertas(); // <--- CORREÇÃO: Chamando a função ao clicar na aba
+        carregarOfertas(); // <--- Chamada para carregar dízimos
     }
 };
 
-// --- AGENDA DE EVENTOS E INSCRIÇÃO ---
+// --- OFERTAS E DÍZIMOS ---
+async function carregarOfertas() {
+    if (!idCliente) return;
+    const container = document.getElementById('listaOfertasContainer');
+    if (!container) return;
+
+    container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando opções...</p>`;
+
+    try {
+        const colRef = collection(db, "clientes", idCliente, "ofertas");
+        const snap = await getDocs(colRef);
+        
+        if (snap.empty) {
+            container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhuma informação de dízimo disponível.</p>`;
+            return;
+        }
+
+        container.innerHTML = "";
+        snap.forEach((doc) => {
+            const of = doc.data();
+            container.innerHTML += `
+                <div class="card-oferta" style="background:#1a1a1a; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #333;">
+                    ${of.imagem ? `<img src="${of.imagem}" style="width:100%; border-radius:8px; margin-bottom:10px;">` : ''}
+                    <h4 style="color:#fff; margin:0 0 5px 0;">${of.titulo || 'Oferta'}</h4>
+                    <p style="color:#aaa; font-size:0.85rem; margin-bottom:12px;">${of.descricao || ''}</p>
+                    <a href="${of.link}" target="_blank" style="display:block; text-align:center; background:var(--cor-primaria); color:white; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold;">
+                        Contribuir Agora
+                    </a>
+                </div>`;
+        });
+    } catch (e) {
+        container.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar ofertas.</p>`;
+    }
+}
+
+// --- AGENDA DE EVENTOS ---
 async function carregarAgenda() {
     if (!idCliente) return;
     const container = document.getElementById('listaEventos');
     if (!container) return;
-
     container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando agenda...</p>`;
-
     try {
         const colRef = collection(db, "clientes", idCliente, "eventos");
         const snap = await getDocs(colRef);
-        
         if (snap.empty) {
             container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhum evento programado.</p>`;
             return;
         }
-
         let eventos = [];
-        snap.forEach(doc => {
-            eventos.push({ id: doc.id, ...doc.data() });
-        });
-
+        snap.forEach(doc => { eventos.push({ id: doc.id, ...doc.data() }); });
         eventos.sort((a, b) => (a.data > b.data ? 1 : -1));
-
         container.innerHTML = "";
         eventos.forEach((evento) => {
             const dataValor = evento.data || "2026-01-01";
@@ -239,7 +264,6 @@ async function carregarAgenda() {
             const dataLocal = new Date(partes[0], partes[1] - 1, partes[2]);
             const mes = dataLocal.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
             const corEvento = evento.cor || 'var(--cor-primaria)';
-
             container.innerHTML += `
                 <div class="card-agenda" onclick="window.abrirInscricao('${evento.id}', '${evento.titulo}', '${evento.data}', '${evento.hora}')" style="display:flex; background:#1a1a1a; margin-bottom:12px; border-radius:12px; overflow:hidden; border:1px solid #333; cursor:pointer;">
                     <div style="background:${corEvento}; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-weight:bold; text-transform:uppercase; flex-shrink:0;">
@@ -250,55 +274,11 @@ async function carregarAgenda() {
                         <h4 style="margin:0 0 5px 0; color:#fff; font-size:1rem; font-weight:600;">${evento.titulo || 'Sem Título'}</h4>
                         <div style="display:flex; flex-wrap:wrap; gap:10px; color:#aaa; font-size:0.8rem;">
                             <span><i class="far fa-clock" style="color:${corEvento}"></i> ${evento.hora || '--:--'}</span>
-                            ${evento.local ? `<span><i class="fas fa-map-marker-alt" style="color:${corEvento}"></i> ${evento.local}</span>` : ''}
                         </div>
-                        <p style="margin-top:8px; color:var(--cor-primaria); font-size:0.75rem; font-weight:bold;">Toque para se inscrever</p>
                     </div>
                 </div>`;
         });
-    } catch (e) {
-        console.error("AGENDA Erro:", e);
-        container.innerHTML = `<p style="color:red; text-align:center; padding:20px;">Erro ao carregar agenda.</p>`;
-    }
-}
-
-// --- SISTEMA DE OFERTAS ---
-async function carregarOfertas() {
-    if (!idCliente) return;
-    const container = document.getElementById('listaOfertasContainer'); // Garanta que este ID existe no seu HTML
-    if (!container) return;
-
-    container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando ofertas...</p>`;
-
-    try {
-        const colRef = collection(db, "clientes", idCliente, "ofertas");
-        const q = query(colRef, orderBy("dataCriacao", "desc"));
-        const snap = await getDocs(q);
-
-        if (snap.empty) {
-            container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhuma oferta ou dízimo disponível.</p>`;
-            return;
-        }
-
-        container.innerHTML = "";
-        snap.forEach((doc) => {
-            const of = doc.data();
-            container.innerHTML += `
-                <div class="card-oferta" style="background:#1a1a1a; border-radius:15px; overflow:hidden; margin-bottom:15px; border:1px solid #333;">
-                    ${of.imagem ? `<img src="${of.imagem}" style="width:100%; height:160px; object-fit:cover;">` : ''}
-                    <div style="padding:15px;">
-                        <h3 style="color:#fff; margin:0 0 8px 0; font-size:1.1rem;">${of.titulo}</h3>
-                        ${of.descricao ? `<p style="color:#aaa; font-size:0.9rem; margin-bottom:12px;">${of.descricao}</p>` : ''}
-                        <a href="${of.link}" target="_blank" style="display:block; text-align:center; background:var(--cor-primaria); color:#fff; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:0.9rem;">
-                            <i class="fas fa-external-link-alt"></i> Contribuir / Acessar
-                        </a>
-                    </div>
-                </div>`;
-        });
-    } catch (e) {
-        console.error("Erro Ofertas:", e);
-        container.innerHTML = `<p style="color:red; text-align:center; padding:20px;">Erro ao carregar ofertas.</p>`;
-    }
+    } catch (e) { container.innerHTML = `<p style="color:red; text-align:center;">Erro na agenda.</p>`; }
 }
 
 // Funções de Modal de Inscrição
@@ -313,27 +293,23 @@ window.abrirInscricao = (id, titulo, data, hora) => {
     modal.style.display = 'flex';
 };
 
-window.fecharInscricao = () => {
-    document.getElementById('modalInscricao').style.display = 'none';
-};
+window.fecharInscricao = () => { document.getElementById('modalInscricao').style.display = 'none'; };
 
 window.confirmarInscricao = async () => {
     const idEv = document.getElementById('ins_evento_id').value;
     const nome = document.getElementById('ins_nome').value;
     const sobrenome = document.getElementById('ins_sobrenome').value;
     const cpf = document.getElementById('ins_cpf').value;
-    if (!nome || !cpf) return alert("Preencha seu Nome e CPF para continuar.");
+    if (!nome || !cpf) return alert("Preencha seu Nome e CPF.");
     try {
         await addDoc(collection(db, "clientes", idCliente, "eventos", idEv, "inscritos"), {
             nome, sobrenome, nomeCompleto: `${nome} ${sobrenome}`, cpf,
             userId: auth.currentUser ? auth.currentUser.uid : "anonimo",
-            email: auth.currentUser ? auth.currentUser.email : "",
             dataInscricao: new Date()
         });
-        alert("Inscrição confirmada com sucesso!");
+        alert("Inscrição realizada!");
         window.fecharInscricao();
-        document.getElementById('ins_cpf').value = "";
-    } catch (e) { alert("Erro ao realizar inscrição."); }
+    } catch (e) { alert("Erro na inscrição."); }
 };
 
 // --- LEITURA DIÁRIA ---
@@ -349,7 +325,7 @@ async function carregarLeituraDiaria() {
         snap.forEach(doc => { leiturasCache.push({ id: doc.id, ...doc.data() }); });
         leiturasCache.sort((a, b) => (b.dataLeitura > a.dataLeitura ? 1 : -1));
         renderizarLeituras();
-    } catch (e) { container.innerHTML = `<p style="text-align:center; color:red;">Erro ao carregar dados.</p>`; }
+    } catch (e) { container.innerHTML = `<p style="color:red;">Erro ao carregar leituras.</p>`; }
 }
 
 function renderizarLeituras() {
@@ -362,33 +338,18 @@ function renderizarLeituras() {
         const estaLida = lidasStorage.includes(item.id);
         return filtroLeituraAtual === 'lidas' ? estaLida : !estaLida;
     });
-    if (filtradas.length === 0) {
-        container.innerHTML = `<p style="text-align:center; color:#666; margin-top:30px;">Nenhuma leitura encontrada.</p>`;
-        return;
-    }
     filtradas.forEach((dados) => {
-        const dataFormatada = dados.dataLeitura ? dados.dataLeitura.split('-').reverse().join('/') : "--/--/--";
         const estaLida = lidasStorage.includes(dados.id);
         container.innerHTML += `
             <div class="card-leitura-diaria" style="background:#1a1a1a; padding:20px; border-radius:15px; margin-bottom:15px; border:1px solid #333;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <span style="background:var(--cor-primaria); color:#fff; padding:4px 12px; border-radius:20px; font-size:0.7rem; font-weight:bold;">${dataFormatada}</span>
-                </div>
                 <h2 style="color:#fff; margin: 0 0 10px 0; font-size:1.4rem;">${dados.referencia || 'Leitura'}</h2>
-                <div style="color:#bbb; line-height:1.7; font-size:1rem; margin-bottom:15px;">${dados.texto ? dados.texto.replace(/\n/g, '<br>') : ''}</div>
-                <button onclick="window.toggleLido('${dados.id}')" style="width:100%; padding:12px; border-radius:10px; background:#222; color:white; font-weight:bold; cursor:pointer; border:1px solid #444;">
-                    <i class="fas ${estaLida ? 'fa-undo' : 'fa-check'}"></i> ${estaLida ? 'Marcar como não lido' : 'Marcar como lido'}
+                <div style="color:#bbb; margin-bottom:15px;">${dados.texto ? dados.texto.replace(/\n/g, '<br>') : ''}</div>
+                <button onclick="window.toggleLido('${dados.id}')" style="width:100%; padding:12px; background:#222; color:white; border-radius:10px; border:1px solid #444;">
+                    ${estaLida ? 'Marcar como não lido' : 'Marcar como lido'}
                 </button>
             </div>`;
     });
 }
-
-window.filtrarLeitura = (modo) => {
-    filtroLeituraAtual = modo;
-    document.getElementById('tabPendentes')?.classList.toggle('active', modo === 'pendentes');
-    document.getElementById('tabLidas')?.classList.toggle('active', modo === 'lidas');
-    renderizarLeituras();
-};
 
 window.toggleLido = (id) => {
     const chaveLidos = `leituras_lidas_${idCliente}`;
@@ -401,8 +362,7 @@ window.toggleLido = (id) => {
 // --- VÍDEOS ---
 function extrairVideoID(url) {
     if (!url) return null;
-    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-    const match = url.match(regExp);
+    const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
     return (match && match[7].length == 11) ? match[7] : null;
 }
 
@@ -411,14 +371,12 @@ window.abrirVideo = (videoId) => {
     const iframe = document.getElementById('iframeVideo');
     if (iframe) iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
     if (modal) modal.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
 };
 
 window.fecharVideo = () => {
     const iframe = document.getElementById('iframeVideo');
     if (iframe) iframe.src = "";
     document.getElementById('modalVideo').style.display = 'none';
-    document.body.style.overflow = 'auto';
 };
 
 async function carregarVideosHome() {
@@ -432,14 +390,7 @@ async function carregarVideosHome() {
         const v = doc.data();
         const videoId = extrairVideoID(v.url);
         if(videoId) {
-            container.innerHTML += `
-                <div class="card-video-premium" onclick="window.abrirVideo('${videoId}')">
-                    <div class="thumb-container">
-                        <img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg">
-                        <div class="play-overlay"><i class="fas fa-play"></i></div>
-                    </div>
-                    <div class="video-info">${v.serie || 'Conteúdo'}</div>
-                </div>`;
+            container.innerHTML += `<div class="card-video-premium" onclick="window.abrirVideo('${videoId}')"><img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg"><div class="video-info">${v.serie || 'Conteúdo'}</div></div>`;
         }
     });
 }
@@ -455,13 +406,7 @@ async function carregarTodosVideos() {
         const v = doc.data();
         const videoId = extrairVideoID(v.url);
         if(videoId) {
-            container.innerHTML += `
-                <div class="card-video-premium" onclick="window.abrirVideo('${videoId}')" style="width:100%; margin:0;">
-                    <div class="thumb-container">
-                        <img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" style="width:100%;">
-                    </div>
-                    <div class="video-info">${v.serie || 'Conteúdo'}</div>
-                </div>`;
+            container.innerHTML += `<div class="card-video-premium" onclick="window.abrirVideo('${videoId}')"><img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg"><div class="video-info">${v.serie || 'Conteúdo'}</div></div>`;
         }
     });
 }
@@ -475,9 +420,7 @@ window.abrirModalNota = (id = null, titulo = '', texto = '') => {
     document.getElementById('modalNota').style.display = 'flex';
 };
 
-window.fecharModalNota = () => {
-    document.getElementById('modalNota').style.display = 'none';
-};
+window.fecharModalNota = () => { document.getElementById('modalNota').style.display = 'none'; };
 
 window.salvarNota = async () => {
     const user = auth.currentUser;
@@ -485,7 +428,6 @@ window.salvarNota = async () => {
     const id = document.getElementById('notaId').value;
     const titulo = document.getElementById('notaTitulo').value;
     const texto = document.getElementById('notaTexto').value;
-    if (!titulo || !texto) return alert("Preencha título e texto.");
     const notaData = { titulo, texto, userId: user.uid, idCliente: idCliente, dataAtualizacao: new Date() };
     try {
         if (id) { await updateDoc(doc(db, "anotacoes_membros", id), notaData); } 
@@ -496,10 +438,7 @@ window.salvarNota = async () => {
 
 window.excluirNota = async () => {
     const id = document.getElementById('notaId').value;
-    if (id && confirm("Deseja excluir esta nota?")) { 
-        await deleteDoc(doc(db, "anotacoes_membros", id)); 
-        window.fecharModalNota(); 
-    }
+    if (id && confirm("Deseja excluir?")) { await deleteDoc(doc(db, "anotacoes_membros", id)); window.fecharModalNota(); }
 };
 
 function escutarAnotacoes() {
@@ -513,14 +452,7 @@ function escutarAnotacoes() {
         container.innerHTML = "";
         snapshot.forEach((doc) => {
             const n = doc.data();
-            const id = doc.id;
-            const tEsc = (n.titulo || "").replace(/'/g, "\\'");
-            const txtEsc = (n.texto || "").replace(/'/g, "\\'").replace(/\n/g, "\\n");
-            container.innerHTML += `
-                <div class="card-nota" onclick="window.abrirModalNota('${id}', '${tEsc}', '${txtEsc}')">
-                    <h4 class="nota-item-titulo">${n.titulo || "Sem título"}</h4>
-                    <p class="nota-item-texto">${n.texto || ""}</p>
-                </div>`;
+            container.innerHTML += `<div class="card-nota" onclick="window.abrirModalNota('${doc.id}', '${n.titulo}', '${n.texto}')"><h4>${n.titulo}</h4><p>${n.texto}</p></div>`;
         });
     });
 }
@@ -536,9 +468,9 @@ window.abrirSeletorLivros = () => {
 window.selecionarCapitulo = (livro) => {
     livroSelecionado = livro;
     const container = document.getElementById('containerSelecao');
-    container.innerHTML = `<div style="grid-column:1/-1; padding:10px; font-weight:bold; color:var(--cor-primaria)">${livro}: Escolha o Capítulo</div>`;
-    for(let i = 1; i <= 60; i++) {
-        container.innerHTML += `<button onclick="window.finalizarSelecao('${livro}', ${i})" style="background:var(--cor-primaria); color:white;">${i}</button>`;
+    container.innerHTML = `<div style="grid-column:1/-1; color:var(--cor-primaria)">${livro}: Escolha o Capítulo</div>`;
+    for(let i = 1; i <= 50; i++) {
+        container.innerHTML += `<button onclick="window.finalizarSelecao('${livro}', ${i})">${i}</button>`;
     }
 };
 
@@ -550,23 +482,15 @@ window.finalizarSelecao = (livro, cap) => {
 
 window.buscarBiblia = async (tipo, valorManual = null) => {
     const resContainer = document.getElementById('resultadoBiblia');
-    const labelNav = document.getElementById('labelNavegacao');
-    const inputPalavra = document.getElementById('inputPalavra');
-    let busca = valorManual || (inputPalavra ? inputPalavra.value : "");
+    let busca = valorManual || document.getElementById('inputPalavra').value;
     if (!busca) return;
-    resContainer.innerHTML = "<p style='text-align:center;'>Buscando palavra...</p>";
+    resContainer.innerHTML = "Buscando...";
     try {
         const response = await fetch(`https://bible-api.com/${encodeURIComponent(busca)}?translation=almeida`);
         const data = await response.json();
         if (data.verses) {
-            localStorage.setItem('ultima_leitura', busca);
-            if(labelNav) labelNav.innerText = data.reference;
-            resContainer.innerHTML = data.verses.map(v => `
-                <div style="margin-bottom:15px; display:flex; gap:10px;">
-                    <span style="color:var(--cor-primaria); font-weight:bold;">${v.verse}</span>
-                    <p style="margin:0; color:#fff;">${v.text}</p>
-                </div>`).join('');
-        } else { resContainer.innerHTML = "<p style='text-align:center;'>Referência não encontrada.</p>"; }
+            resContainer.innerHTML = data.verses.map(v => `<p><strong>${v.verse}</strong> ${v.text}</p>`).join('');
+        }
     } catch (e) { resContainer.innerHTML = "Erro ao buscar."; }
 };
 
@@ -580,12 +504,7 @@ async function carregarNoticiasHome() {
     container.innerHTML = "";
     snap.forEach((doc) => {
         const n = doc.data();
-        const json = JSON.stringify({titulo: n.titulo, capa: n.capa, texto: n.texto}).replace(/"/g, '&quot;');
-        container.innerHTML += `
-            <div class="card-video-premium" style="min-width:220px;" onclick="window.abrirReflexao('${json}')">
-                <img src="${n.capa || 'https://placehold.co/600x400'}" style="height:140px; object-fit:cover; width:100%;">
-                <div class="video-info"><strong>${n.titulo}</strong></div>
-            </div>`;
+        container.innerHTML += `<div class="card-video-premium" onclick="window.abrirReflexao('${JSON.stringify(n).replace(/"/g, '&quot;')}')"><img src="${n.capa}"><div class="video-info">${n.titulo}</div></div>`;
     });
 }
 
@@ -597,49 +516,32 @@ window.abrirReflexao = (jsonStr) => {
     document.getElementById('modalReflexao').style.display = 'flex';
 };
 
-window.fecharReflexao = () => {
-    document.getElementById('modalReflexao').style.display = 'none';
-};
+window.fecharReflexao = () => { document.getElementById('modalReflexao').style.display = 'none'; };
 
-// --- SISTEMA DE ORAÇÃO ---
+// --- ORAÇÃO ---
 window.enviarPedidoOracao = async () => {
-    const nomeInput = document.getElementById('oracaoNome');
-    const textoInput = document.getElementById('oracaoTexto');
-    const btn = document.getElementById('btnEnviarOracao');
-    const msg = document.getElementById('msgSucessoOracao');
-    if (!nomeInput.value || !textoInput.value) { alert("Preencha seu nome e o pedido."); return; }
-    btn.disabled = true;
+    const nome = document.getElementById('oracaoNome').value;
+    const texto = document.getElementById('oracaoTexto').value;
+    if (!nome || !texto) return alert("Preencha tudo.");
     try {
         await addDoc(collection(db, "clientes", idCliente, "pedidos_oracao"), {
-            nome: nomeInput.value,
-            pedido: textoInput.value,
-            userId: auth.currentUser ? auth.currentUser.uid : "anonimo",
-            status: "pendente",
-            idCliente: idCliente,
-            dataCriacao: new Date()
+            nome, pedido: texto, userId: auth.currentUser.uid, status: "pendente", idCliente, dataCriacao: new Date()
         });
-        nomeInput.value = ""; textoInput.value = "";
-        msg.style.display = "block";
-        setTimeout(() => { msg.style.display = "none"; btn.disabled = false; }, 3000);
-    } catch (e) { btn.disabled = false; }
+        alert("Pedido enviado!");
+    } catch (e) { console.error(e); }
 };
 
 function escutarMeusPedidosOracao() {
     const user = auth.currentUser;
-    const container = document.getElementById('meusPedidosLista');
-    if (!user || !container) return;
+    if (!user) return;
     const q = query(collection(db, "clientes", idCliente, "pedidos_oracao"), where("userId", "==", user.uid), orderBy("dataCriacao", "desc"), limit(10));
-    if (unsubscribeOracoes) unsubscribeOracoes();
-    unsubscribeOracoes = onSnapshot(q, (snapshot) => {
-        container.innerHTML = snapshot.empty ? "<p>Nenhum pedido.</p>" : "";
+    onSnapshot(q, (snapshot) => {
+        const container = document.getElementById('meusPedidosLista');
+        if (!container) return;
+        container.innerHTML = "";
         snapshot.forEach((doc) => {
             const p = doc.data();
-            const cor = p.status === 'pendente' ? 'orange' : '#2d6a4f';
-            container.innerHTML += `
-                <div style="background:#222; padding:12px; border-radius:10px; margin-bottom:10px; border-left:4px solid ${cor};">
-                    <p style="color:#fff; margin:0;">${p.pedido}</p>
-                    <small style="color:${cor}; font-weight:bold;">${p.status === 'pendente' ? 'Pendente' : 'Atendido'}</small>
-                </div>`;
+            container.innerHTML += `<div style="border-left:4px solid ${p.status === 'pendente' ? 'orange' : 'green'}; padding:10px; margin-bottom:10px;">${p.pedido}</div>`;
         });
     });
 }
