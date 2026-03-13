@@ -36,54 +36,39 @@ window.mostrarSessao = (sessao) => {
     
     document.querySelectorAll('.menu-items li').forEach(li => li.classList.remove('active'));
 
-    if (sessao === 'add') {
-        document.getElementById('secaoAdicionar').style.display = 'block';
-        document.getElementById('menuAdd').classList.add('active');
-    } else if (sessao === 'list') {
-        document.getElementById('secaoGerenciar').style.display = 'block';
-        document.getElementById('menuList').classList.add('active');
-        carregarVideos();
-    } else if (sessao === 'noticias') {
-        document.getElementById('secaoNoticias').style.display = 'block';
-        document.getElementById('menuNews').classList.add('active');
-        carregarNoticias();
-    } else if (sessao === 'eventos') {
-        document.getElementById('secaoEventos').style.display = 'block';
-        document.getElementById('menuEvents').classList.add('active');
-        carregarEventos();
-    } else if (sessao === 'ofertas') {
-        document.getElementById('secaoOfertas').style.display = 'block';
-        document.getElementById('menuOffers').classList.add('active');
-        carregarOfertas();
-    } else if (sessao === 'usuarios') {
-        document.getElementById('secaoUsuarios').style.display = 'block';
-        document.getElementById('menuUsers').classList.add('active');
-        carregarUsuariosApp();
-    } else if (sessao === 'leitura') {
-        document.getElementById('secaoLeitura').style.display = 'block';
-        document.getElementById('menuBible').classList.add('active');
-        carregarLeituras();
-    } else if (sessao === 'notificacoes') {
-        document.getElementById('secaoNotificacoes').style.display = 'block';
-        document.getElementById('menuPush').classList.add('active');
-    } else if (sessao === 'oracoes') { 
-        document.getElementById('secaoOracoes').style.display = 'block';
-        document.getElementById('menuPrayers').classList.add('active');
-        carregarOracoes();
+    const mapeamento = {
+        'add': { secao: 'secaoAdicionar', menu: 'menuAdd' },
+        'list': { secao: 'secaoGerenciar', menu: 'menuList', acao: carregarVideos },
+        'noticias': { secao: 'secaoNoticias', menu: 'menuNews', acao: carregarNoticias },
+        'eventos': { secao: 'secaoEventos', menu: 'menuEvents', acao: carregarEventos },
+        'ofertas': { secao: 'secaoOfertas', menu: 'menuOffers', acao: carregarOfertas },
+        'usuarios': { secao: 'secaoUsuarios', menu: 'menuUsers', acao: carregarUsuariosApp },
+        'leitura': { secao: 'secaoLeitura', menu: 'menuBible', acao: carregarLeituras },
+        'notificacoes': { secao: 'secaoNotificacoes', menu: 'menuPush' },
+        'oracoes': { secao: 'secaoOracoes', menu: 'menuPrayers', acao: carregarOracoes }
+    };
+
+    const config = mapeamento[sessao];
+    if (config) {
+        const elSecao = document.getElementById(config.secao);
+        const elMenu = document.getElementById(config.menu);
+        if (elSecao) elSecao.style.display = 'block';
+        if (elMenu) elMenu.classList.add('active');
+        if (config.acao) config.acao();
     }
 };
 
 // --- 3. LÓGICA CONDICIONAL DE EVENTOS ---
 window.toggleInscricao = () => {
-    const check = document.getElementById('checkInscricao').checked;
+    const check = document.getElementById('checkInscricao');
     const bloco = document.getElementById('blocoInscricao');
-    if(bloco) bloco.style.display = check ? 'block' : 'none';
+    if(bloco && check) bloco.style.display = check.checked ? 'block' : 'none';
 };
 
 window.togglePagamento = () => {
-    const check = document.getElementById('checkPago').checked;
+    const check = document.getElementById('checkPago');
     const bloco = document.getElementById('blocoPagamento');
-    if(bloco) bloco.style.display = check ? 'block' : 'none';
+    if(bloco && check) bloco.style.display = check.checked ? 'block' : 'none';
 };
 
 // --- 4. GESTÃO DE VÍDEOS ---
@@ -118,10 +103,10 @@ function renderizarGradeVideos(lista) {
                 <img src="${thumb}" class="thumb-video">
                 <div class="info-video">
                     <span class="badge-serie">${video.serie || 'Geral'}</span>
-                    <h4>${video.serie}</h4>
+                    <h4>${video.serie || 'Sem Título'}</h4>
                     <p>${video.descricao || ''}</p>
                     <div class="acoes-video">
-                        <button onclick="window.prepararEdicaoVideo('${video.id}', '${video.serie.replace(/'/g, "\\'")}', '${video.descricao.replace(/'/g, "\\'")}')" class="btn-edit-sm"><i class="fas fa-edit"></i></button>
+                        <button onclick="window.prepararEdicaoVideo('${video.id}', '${(video.serie || "").replace(/'/g, "\\'")}', '${(video.descricao || "").replace(/'/g, "\\'")}')" class="btn-edit-sm"><i class="fas fa-edit"></i></button>
                         <button onclick="window.excluirVideo('${video.id}')" class="btn-delete-sm"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>
@@ -132,7 +117,9 @@ function renderizarGradeVideos(lista) {
 document.getElementById('formConteudo')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnAcaoPrincipal');
-    const thumbFile = document.getElementById('videoThumb').files[0];
+    const inputThumb = document.getElementById('videoThumb');
+    const thumbFile = inputThumb?.files ? inputThumb.files[0] : null;
+    
     btn.disabled = true; btn.innerText = "Publicando...";
 
     try {
@@ -169,7 +156,7 @@ function carregarNoticias() {
             const n = docSnap.data();
             container.innerHTML += `
                 <div class="card-video">
-                    <img src="${n.capa}" class="thumb-video">
+                    <img src="${n.capa || 'https://placehold.co/300x150/222/white?text=Noticia'}" class="thumb-video">
                     <div class="info-video">
                         <h4>${n.titulo}</h4>
                         <p>${n.texto.substring(0, 80)}...</p>
@@ -185,7 +172,9 @@ function carregarNoticias() {
 document.getElementById('formNoticia')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSalvarNoticia');
-    const imgFile = document.getElementById('noticiaImg').files[0];
+    const inputImg = document.getElementById('noticiaImg');
+    const imgFile = inputImg?.files ? inputImg.files[0] : null;
+    
     btn.disabled = true; btn.innerText = "Publicando...";
 
     try {
@@ -212,7 +201,9 @@ document.getElementById('formNoticia')?.addEventListener('submit', async (e) => 
 document.getElementById('formEvento')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSalvarEvento');
-    const imgFile = document.getElementById('eventoImg').files[0];
+    const inputImg = document.getElementById('eventoImg');
+    const imgFile = inputImg?.files ? inputImg.files[0] : null;
+    
     btn.disabled = true; btn.innerText = "Publicando...";
 
     try {
@@ -260,7 +251,7 @@ function carregarEventos() {
 
             container.innerHTML += `
                 <div class="card-video">
-                    <img src="${ev.capa}" class="thumb-video">
+                    <img src="${ev.capa || 'https://placehold.co/300x150/222/white?text=Evento'}" class="thumb-video">
                     <div class="info-video">
                         <h4>${ev.titulo}</h4>
                         <span class="badge-serie">${ev.exigeInscricao ? "Com Inscrição" : "Evento Aberto"}</span>
@@ -277,6 +268,7 @@ function carregarEventos() {
 
 window.verInscritos = async (idEvento) => {
     const tbody = document.getElementById('listaInscritosBody');
+    if (!tbody) return;
     tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Carregando...</td></tr>";
     document.getElementById('modalInscritos').style.display = 'flex';
 
@@ -312,7 +304,9 @@ window.fecharModalInscritos = () => { document.getElementById('modalInscritos').
 document.getElementById('formOferta')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('btnSalvarOferta');
-    const imgFile = document.getElementById('ofertaImg').files[0];
+    const inputImg = document.getElementById('ofertaImg');
+    const imgFile = inputImg?.files ? inputImg.files[0] : null;
+
     btn.disabled = true; btn.innerText = "Salvando...";
 
     try {
@@ -484,7 +478,6 @@ function carregarOracoes() {
     const tbody = document.getElementById('tabelaOracoesBody');
     if (!tbody) return;
 
-    // ATENÇÃO: Mudança para 'pedidos_oracao' para bater com o App
     const q = query(collection(db, "clientes", idClienteDoc, "pedidos_oracao"), orderBy("dataCriacao", "desc"));
     
     onSnapshot(q, (snapshot) => {
@@ -496,11 +489,8 @@ function carregarOracoes() {
 
         snapshot.forEach((docSnap) => {
             const ora = docSnap.data();
-            
-            // Tratamento da data vinda do App (dataCriacao)
             let dataFmt = '---';
             if (ora.dataCriacao) {
-                // Verifica se é Timestamp do Firebase ou Objeto Date
                 const d = ora.dataCriacao.toDate ? ora.dataCriacao.toDate() : new Date(ora.dataCriacao);
                 dataFmt = d.toLocaleDateString('pt-BR') + " " + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
             }
@@ -558,8 +548,10 @@ async function buscarDadosCliente(userUid) {
 
 function aplicarIdentidadeVisual(dados) {
     document.documentElement.style.setProperty('--cor-primaria', dados.corPrimaria || '#2563eb');
-    if (document.getElementById('logoClienteApp')) document.getElementById('logoClienteApp').src = dados.logoUrl || '';
-    if (document.getElementById('nomeOrgDisplay')) document.getElementById('nomeOrgDisplay').innerText = dados.nome;
+    const logoEl = document.getElementById('logoClienteApp');
+    if (logoEl) logoEl.src = dados.logoUrl || 'https://placehold.co/150';
+    const nomeEl = document.getElementById('nomeOrgDisplay');
+    if (nomeEl) nomeEl.innerText = dados.nome || "Painel Administrativo";
 }
 
 onAuthStateChanged(auth, (user) => {
@@ -579,17 +571,28 @@ window.prepararEdicaoVideo = (id, serie, desc) => {
     document.getElementById('editVideoDesc').value = desc;
     document.getElementById('modalEditarVideo').style.display = 'flex';
 };
-window.fecharModalEdicao = () => document.getElementById('modalEditarVideo').style.display = 'none';
+window.fecharModalEdicao = () => {
+    const modal = document.getElementById('modalEditarVideo');
+    if(modal) modal.style.display = 'none';
+};
 
 document.getElementById('formEditarVideo')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    await updateDoc(doc(db, "clientes", idClienteDoc, "conteudos", document.getElementById('editVideoId').value), {
-        serie: document.getElementById('editVideoSerie').value,
-        descricao: document.getElementById('editVideoDesc').value
-    });
-    window.fecharModalEdicao();
+    try {
+        await updateDoc(doc(db, "clientes", idClienteDoc, "conteudos", document.getElementById('editVideoId').value), {
+            serie: document.getElementById('editVideoSerie').value,
+            descricao: document.getElementById('editVideoDesc').value
+        });
+        window.fecharModalEdicao();
+    } catch(err) { alert("Erro ao editar vídeo."); }
 });
 
-window.abrirModalSenha = () => document.getElementById('modalSenhaCliente').style.display = 'flex';
-window.fecharModalSenha = () => document.getElementById('modalSenhaCliente').style.display = 'none';
+window.abrirModalSenha = () => {
+    const modal = document.getElementById('modalSenhaCliente');
+    if(modal) modal.style.display = 'flex';
+};
+window.fecharModalSenha = () => {
+    const modal = document.getElementById('modalSenhaCliente');
+    if(modal) modal.style.display = 'none';
+};
 window.logoutCliente = () => { if(confirm("Sair?")) signOut(auth).then(() => window.location.href = "login-cliente.html"); };
