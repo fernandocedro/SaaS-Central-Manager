@@ -1,6 +1,6 @@
 {
-  "name": "Nome da sua Igreja",
-  "short_name": "IgrejaApp",
+  "name": "Teste Church",
+  "short_name": "TesteChurch",
   "start_url": "index.html?id=jLO6R7R15iDKfPg25VTC",
   "display": "standalone",
   "background_color": "#1a1a1a",
