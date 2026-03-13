@@ -23,11 +23,10 @@ let todosOsVideos = [];
 
 // --- 2. NAVEGAÇÃO ENTRE ABAS (ATUALIZADA) ---
 window.mostrarSessao = (sessao) => {
-    // Esconde absolutamente todas as seções conhecidas
     const secoesIds = [
         'secaoAdicionar', 'secaoGerenciar', 'secaoNoticias', 
         'secaoEventos', 'secaoOfertas', 'secaoUsuarios', 
-        'secaoLeitura', 'secaoNotificacoes'
+        'secaoLeitura', 'secaoNotificacoes', 'secaoOracoes' // Adicionado aqui
     ];
     
     secoesIds.forEach(id => {
@@ -67,6 +66,10 @@ window.mostrarSessao = (sessao) => {
     } else if (sessao === 'notificacoes') {
         document.getElementById('secaoNotificacoes').style.display = 'block';
         document.getElementById('menuPush').classList.add('active');
+    } else if (sessao === 'oracoes') { // Nova aba de orações
+        document.getElementById('secaoOracoes').style.display = 'block';
+        document.getElementById('menuPrayers').classList.add('active');
+        carregarOracoes();
     }
 };
 
@@ -474,6 +477,47 @@ function carregarLeituras() {
 }
 
 window.excluirLeitura = async (id) => { if (confirm("Excluir leitura?")) await deleteDoc(doc(db, "clientes", idClienteDoc, "leituras", id)); };
+
+// --- GESTÃO DE ORAÇÕES (NOVA SEÇÃO) ---
+function carregarOracoes() {
+    if (!idClienteDoc) return;
+    const tbody = document.getElementById('tabelaOracoesBody');
+    if (!tbody) return;
+
+    // Buscando pedidos de oração do subcoleção do cliente
+    const q = query(collection(db, "clientes", idClienteDoc, "oracoes"), orderBy("dataPedido", "desc"));
+    
+    onSnapshot(q, (snapshot) => {
+        tbody.innerHTML = "";
+        if (snapshot.empty) {
+            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;'>Nenhum pedido de oração encontrado.</td></tr>";
+            return;
+        }
+
+        snapshot.forEach((docSnap) => {
+            const ora = docSnap.data();
+            const dataFmt = ora.dataPedido ? ora.dataPedido.toDate().toLocaleDateString('pt-BR') : '---';
+            
+            tbody.innerHTML += `
+                <tr>
+                    <td>${dataFmt}</td>
+                    <td>${ora.nome || 'Anônimo'}</td>
+                    <td style="max-width: 300px; white-space: normal;">${ora.pedido}</td>
+                    <td>
+                        <button onclick="window.excluirOracao('${docSnap.id}')" class="btn-delete-sm">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+        });
+    });
+}
+
+window.excluirOracao = async (id) => {
+    if (confirm("Excluir pedido de oração?")) {
+        await deleteDoc(doc(db, "clientes", idClienteDoc, "oracoes", id));
+    }
+};
 
 // --- NOVAS FUNCIONALIDADES: NOTIFICAÇÕES PUSH ---
 document.getElementById('formPush')?.addEventListener('submit', async (e) => {
