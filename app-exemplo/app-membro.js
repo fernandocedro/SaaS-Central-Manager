@@ -152,7 +152,6 @@ async function inicializarApp() {
                 const nomeFinal = userData.nome || user.displayName || "Membro";
                 if(nomeDisplay) nomeDisplay.innerText = nomeFinal;
                 
-                // PREENCHE CAMPOS DO PERFIL
                 if(document.getElementById('perfilNome')) document.getElementById('perfilNome').value = userData.nome || "";
                 if(document.getElementById('perfilEmail')) document.getElementById('perfilEmail').value = userData.email || user.email || "";
                 if(document.getElementById('perfilTel')) document.getElementById('perfilTel').value = userData.whatsapp || "";
@@ -219,91 +218,65 @@ window.mostrarSessao = (aba) => {
     }
 };
 
-// --- FUNÇÃO DE OFERTAS (ATUALIZADA PARA BUSCAR DO FIREBASE) ---
+// --- FUNÇÃO DE OFERTAS (AJUSTADA PARA IMAGEM E LINK DA ADM) ---
 window.carregarOfertas = async () => {
     const container = document.getElementById('listaOfertasContainer');
     if (!container || !idCliente) return;
 
-    container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando formas de contribuição...</p>`;
+    container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando ofertas...</p>`;
 
     try {
         const colRef = collection(db, "clientes", idCliente, "ofertas");
         const snap = await getDocs(colRef);
 
         if (snap.empty) {
-            container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhuma forma de oferta cadastrada.</p>`;
+            container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhuma opção de oferta cadastrada.</p>`;
             return;
         }
 
         container.innerHTML = "";
         snap.forEach((docSnap) => {
             const oferta = docSnap.data();
-            const idDoc = docSnap.id;
-
+            
+            // Renderiza o card seguindo o estilo visual da sua ADM
             container.innerHTML += `
-                <div style="background: #1a1a1a; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
-                        <i class="fas fa-hand-holding-heart" style="font-size: 1.5rem; color: var(--cor-primaria);"></i>
-                        <h4 style="color: #fff; margin: 0;">${oferta.titulo || 'Dízimos e Ofertas'}</h4>
+                <div onclick="window.open('${oferta.link}', '_blank')" class="card-oferta-membro" style="background: #1a1a1a; border-radius: 15px; overflow: hidden; border: 1px solid #333; margin-bottom: 20px; cursor: pointer; transition: 0.3s;">
+                    <div style="width: 100%; height: 180px; position: relative; background: #222;">
+                        ${oferta.imagem ? 
+                            `<img src="${oferta.imagem}" style="width: 100%; height: 100%; object-fit: cover;">` : 
+                            `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #444; font-size: 2rem; font-weight: bold;">Oferta</div>`
+                        }
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.9)); padding: 20px;">
+                            <h4 style="color: #fff; margin: 0; font-size: 1.2rem;">${oferta.titulo || 'Oferta'}</h4>
+                        </div>
                     </div>
-                    
-                    ${oferta.descricao ? `<p style="color: #bbb; font-size: 0.9rem; margin-bottom: 15px;">${oferta.descricao}</p>` : ''}
-
-                    ${oferta.chavePix ? `
-                        <div style="background: #222; padding: 15px; border-radius: 10px; border: 1px dashed var(--cor-primaria); margin-bottom: 15px; text-align: center;">
-                            <span style="color: #888; font-size: 0.8rem; display: block; margin-bottom: 5px;">CHAVE PIX</span>
-                            <strong id="pix-${idDoc}" style="color: #fff; font-size: 1rem; word-break: break-all;">${oferta.chavePix}</strong>
-                            <button onclick="window.copiarTexto('pix-${idDoc}')" 
-                                    style="display: block; width: 100%; margin-top: 10px; background: transparent; border: 1px solid var(--cor-primaria); color: var(--cor-primaria); padding: 8px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">
-                                <i class="far fa-copy"></i> Copiar Chave Pix
-                            </button>
-                        </div>
-                    ` : ''}
-
-                    ${oferta.banco ? `
-                        <div style="text-align: left; color: #bbb; font-size: 0.85rem; background: #222; padding: 12px; border-radius: 10px;">
-                            <p style="margin: 2px 0;"><strong>Banco:</strong> ${oferta.banco}</p>
-                            <p style="margin: 2px 0;"><strong>Agência:</strong> ${oferta.agencia || ''} | <strong>Conta:</strong> ${oferta.conta || ''}</p>
-                            ${oferta.beneficiario ? `<p style="margin: 2px 0;"><strong>Favorecido:</strong> ${oferta.beneficiario}</p>` : ''}
-                        </div>
-                    ` : ''}
+                    <div style="padding: 15px; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="color: var(--cor-primaria); font-size: 0.85rem; font-weight: bold; text-transform: uppercase;">Contribuir agora</span>
+                        <i class="fas fa-external-link-alt" style="color: #666; font-size: 0.9rem;"></i>
+                    </div>
                 </div>
             `;
         });
     } catch (error) {
         console.error("Erro ao carregar ofertas:", error);
-        container.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar dados.</p>`;
+        container.innerHTML = `<p style="color:red; text-align:center;">Erro ao conectar com o servidor.</p>`;
     }
 };
 
-window.copiarTexto = (id) => {
-    const texto = document.getElementById(id).innerText;
-    navigator.clipboard.writeText(texto).then(() => {
-        alert("Copiado para a área de transferência!");
-    });
-};
-
-// --- DEPARTAMENTOS ---
+// --- RESTANTE DO CÓDIGO (DEPARTAMENTOS, AGENDA, ETC) ---
 async function carregarDepartamentos() {
     if (!idCliente) return;
     const container = document.getElementById('listaDepartamentosContainer');
     if (!container) return;
     container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando departamentos...</p>`;
-    
     try {
         const colRef = collection(db, "clientes", idCliente, "departamentos");
         const snap = await getDocs(colRef);
-        
-        if (snap.empty) {
-            container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhum departamento cadastrado.</p>`;
-            return;
-        }
-        
+        if (snap.empty) { container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhum departamento cadastrado.</p>`; return; }
         container.innerHTML = "";
         snap.forEach((docSnapshot) => {
             const dep = docSnapshot.data();
             const idDep = docSnapshot.id;
-
             container.innerHTML += `
                 <div class="card-departamento" style="background:#1a1a1a; padding:15px; border-radius:12px; margin-bottom:15px; border:1px solid #333; display:flex; flex-direction:column; gap:10px;">
                     <div style="display:flex; align-items:center; gap:15px;">
@@ -314,75 +287,54 @@ async function carregarDepartamentos() {
                             ${dep.lider ? `<p style="color:var(--cor-primaria); font-size:0.75rem; margin-top:5px; font-weight:bold;">Líder: ${dep.lider}</p>` : ''}
                         </div>
                     </div>
-                    <button onclick="window.inscreverDepartamento('${idDep}', '${dep.nome}')" 
-                            style="width:100%; background:var(--cor-primaria); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">
-                        Participar deste Departamento
-                    </button>
+                    <button onclick="window.inscreverDepartamento('${idDep}', '${dep.nome}')" style="width:100%; background:var(--cor-primaria); color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:10px;">Participar</button>
                 </div>`;
         });
-    } catch (e) { 
-        console.error(e);
-        container.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar departamentos.</p>`; 
-    }
+    } catch (e) { container.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar.</p>`; }
 }
 
 window.inscreverDepartamento = async (idDep, nomeDep) => {
     const user = auth.currentUser;
-    if (!user) { alert("Você precisa estar logado para se inscrever."); return; }
-    if (!confirm(`Deseja solicitar participação no departamento: ${nomeDep}?`)) return;
-
+    if (!user) { alert("Faça login."); return; }
+    if (!confirm(`Solicitar participação no ${nomeDep}?`)) return;
     try {
-        const membroRef = doc(db, "clientes", idCliente, "departamentos", idDep, "membros", user.uid);
-        await setDoc(membroRef, {
-            nome: user.displayName || "Membro",
-            email: user.email,
-            uid: user.uid,
-            dataInscricao: new Date(),
-            status: "pendente"
+        await setDoc(doc(db, "clientes", idCliente, "departamentos", idDep, "membros", user.uid), {
+            nome: user.displayName || "Membro", email: user.email, uid: user.uid, dataInscricao: new Date(), status: "pendente"
         });
-        alert("Solicitação enviada com sucesso!");
-    } catch (e) { alert("Erro ao realizar inscrição."); }
+        alert("Solicitação enviada!");
+    } catch (e) { alert("Erro ao inscrever."); }
 };
 
-// --- AGENDA ---
 async function carregarAgenda() {
     if (!idCliente) return;
     const container = document.getElementById('listaEventos');
     if (!container) return;
-    container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando agenda...</p>`;
+    container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">Carregando...</p>`;
     try {
-        const colRef = collection(db, "clientes", idCliente, "eventos");
-        const snap = await getDocs(colRef);
-        if (snap.empty) {
-            container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Nenhum evento programado.</p>`;
-            return;
-        }
+        const snap = await getDocs(collection(db, "clientes", idCliente, "eventos"));
+        if (snap.empty) { container.innerHTML = `<p style="color:#666; text-align:center; padding:40px;">Sem eventos.</p>`; return; }
         let eventos = [];
         snap.forEach(doc => { eventos.push({ id: doc.id, ...doc.data() }); });
         eventos.sort((a, b) => (a.data > b.data ? 1 : -1));
         container.innerHTML = "";
         eventos.forEach((evento) => {
-            const dataValor = evento.data || "2026-01-01";
-            const partes = dataValor.split('-'); 
+            const partes = (evento.data || "2026-01-01").split('-');
             const dia = partes[2] || "01";
             const dataLocal = new Date(partes[0], partes[1] - 1, partes[2]);
             const mes = dataLocal.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
             const corEvento = evento.cor || 'var(--cor-primaria)';
             container.innerHTML += `
                 <div class="card-agenda" onclick="window.abrirInscricao('${evento.id}', '${evento.titulo}', '${evento.data}', '${evento.hora}')" style="display:flex; background:#1a1a1a; margin-bottom:12px; border-radius:12px; overflow:hidden; border:1px solid #333; cursor:pointer;">
-                    <div style="background:${corEvento}; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-weight:bold; text-transform:uppercase; flex-shrink:0;">
-                        <span style="font-size:1.3rem; line-height:1;">${dia}</span>
-                        <span style="font-size:0.75rem;">${mes}</span>
+                    <div style="background:${corEvento}; width:65px; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-weight:bold; text-transform:uppercase;">
+                        <span style="font-size:1.3rem;">${dia}</span><span style="font-size:0.75rem;">${mes}</span>
                     </div>
                     <div style="padding:12px; flex:1;">
-                        <h4 style="margin:0 0 5px 0; color:#fff; font-size:1rem; font-weight:600;">${evento.titulo || 'Sem Título'}</h4>
-                        <div style="display:flex; flex-wrap:wrap; gap:10px; color:#aaa; font-size:0.8rem;">
-                            <span><i class="far fa-clock" style="color:${corEvento}"></i> ${evento.hora || '--:--'}</span>
-                        </div>
+                        <h4 style="margin:0; color:#fff;">${evento.titulo}</h4>
+                        <span style="color:#aaa; font-size:0.8rem;"><i class="far fa-clock"></i> ${evento.hora || '--:--'}</span>
                     </div>
                 </div>`;
         });
-    } catch (e) { container.innerHTML = "Erro na agenda."; }
+    } catch (e) { container.innerHTML = "Erro."; }
 }
 
 window.abrirInscricao = (id, titulo, data, hora) => {
@@ -401,126 +353,92 @@ window.fecharInscricao = () => { document.getElementById('modalInscricao').style
 window.confirmarInscricao = async () => {
     const idEv = document.getElementById('ins_evento_id').value;
     const nome = document.getElementById('ins_nome').value;
-    const sobrenome = document.getElementById('ins_sobrenome').value;
     const cpf = document.getElementById('ins_cpf').value;
-    if (!nome || !cpf) return alert("Preencha seu Nome e CPF.");
+    if (!nome || !cpf) return alert("Preencha Nome e CPF.");
     try {
         await addDoc(collection(db, "clientes", idCliente, "eventos", idEv, "inscritos"), {
-            nome, sobrenome, nomeCompleto: `${nome} ${sobrenome}`, cpf,
-            userId: auth.currentUser ? auth.currentUser.uid : "anonimo",
-            dataInscricao: new Date()
+            nomeCompleto: nome, cpf, userId: auth.currentUser ? auth.currentUser.uid : "anonimo", dataInscricao: new Date()
         });
-        alert("Inscrição realizada!");
-        window.fecharInscricao();
-    } catch (e) { alert("Erro na inscrição."); }
+        alert("Inscrição realizada!"); window.fecharInscricao();
+    } catch (e) { alert("Erro."); }
 };
 
-// --- LEITURA DIÁRIA ---
 async function carregarLeituraDiaria() {
     if (!idCliente) return;
     const container = document.getElementById('listaLeituraContainer');
     if(!container) return;
-    container.innerHTML = `<p style="color:#888; text-align:center;">Buscando leituras...</p>`;
     try {
-        const colRef = collection(db, "clientes", idCliente, "leituras");
-        const snap = await getDocs(colRef);
+        const snap = await getDocs(collection(db, "clientes", idCliente, "leituras"));
         leiturasCache = [];
         snap.forEach(doc => { leiturasCache.push({ id: doc.id, ...doc.data() }); });
         leiturasCache.sort((a, b) => (b.dataLeitura > a.dataLeitura ? 1 : -1));
         renderizarLeituras();
-    } catch (e) { container.innerHTML = "Erro ao carregar."; }
+    } catch (e) { container.innerHTML = "Erro."; }
 }
 
-window.filtrarLeitura = (filtro) => {
-    filtroLeituraAtual = filtro; 
-    renderizarLeituras();
-};
-
+window.filtrarLeitura = (filtro) => { filtroLeituraAtual = filtro; renderizarLeituras(); };
 window.toggleLido = (id) => {
-    const chaveLidos = `leituras_lidas_${idCliente}`;
-    let lidas = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
-    if (lidas.includes(id)) { lidas = lidas.filter(i => i !== id); } 
-    else { lidas.push(id); }
-    localStorage.setItem(chaveLidos, JSON.stringify(lidas));
-    renderizarLeituras(); 
+    const chave = `leituras_lidas_${idCliente}`;
+    let lidas = JSON.parse(localStorage.getItem(chave) || "[]");
+    lidas = lidas.includes(id) ? lidas.filter(i => i !== id) : [...lidas, id];
+    localStorage.setItem(chave, JSON.stringify(lidas));
+    renderizarLeituras();
 };
 
 function renderizarLeituras() {
     const container = document.getElementById('listaLeituraContainer');
     if(!container) return;
-    const chaveLidos = `leituras_lidas_${idCliente}`;
-    const lidasStorage = JSON.parse(localStorage.getItem(chaveLidos) || "[]");
+    const lidasStorage = JSON.parse(localStorage.getItem(`leituras_lidas_${idCliente}`) || "[]");
     container.innerHTML = "";
-    const filtradas = leiturasCache.filter(item => {
-        const estaLida = lidasStorage.includes(item.id);
-        return filtroLeituraAtual === 'lidas' ? estaLida : !estaLida;
-    });
-    filtradas.forEach((dados) => {
-        const estaLida = lidasStorage.includes(dados.id);
+    leiturasCache.filter(item => (filtroLeituraAtual === 'lidas' ? lidasStorage.includes(item.id) : !lidasStorage.includes(item.id))).forEach(dados => {
         container.innerHTML += `
             <div class="card-leitura-diaria" style="background:#1a1a1a; padding:20px; border-radius:15px; margin-bottom:15px; border:1px solid #333;">
-                <h2 style="color:#fff; margin: 0 0 10px 0; font-size:1.4rem;">${dados.referencia || 'Leitura'}</h2>
-                <div style="color:#bbb; margin-bottom:15px;">${dados.texto ? dados.texto.replace(/\n/g, '<br>') : ''}</div>
+                <h2 style="color:#fff; margin:0 0 10px 0;">${dados.referencia}</h2>
+                <div style="color:#bbb; margin-bottom:15px;">${(dados.texto || "").replace(/\n/g, '<br>')}</div>
                 <button onclick="window.toggleLido('${dados.id}')" style="width:100%; padding:12px; background:#222; color:white; border-radius:10px; border:1px solid #444; cursor:pointer;">
-                    ${estaLida ? 'Marcar como não lida' : 'Marcar como lido'}
+                    ${lidasStorage.includes(dados.id) ? 'Desmarcar' : 'Marcar como lido'}
                 </button>
             </div>`;
     });
 }
 
-// --- VÍDEOS ---
 function extrairVideoID(url) {
-    if (!url) return null;
-    const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
+    const match = (url || "").match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
     return (match && match[7].length == 11) ? match[7] : null;
 }
 
 window.abrirVideo = (videoId) => {
-    const modal = document.getElementById('modalVideo');
     const iframe = document.getElementById('iframeVideo');
     if (iframe) iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-    if (modal) modal.style.display = 'flex';
+    document.getElementById('modalVideo').style.display = 'flex';
 };
 
-window.fecharVideo = () => {
-    const iframe = document.getElementById('iframeVideo');
-    if (iframe) iframe.src = "";
-    document.getElementById('modalVideo').style.display = 'none';
-};
+window.fecharVideo = () => { if(document.getElementById('iframeVideo')) document.getElementById('iframeVideo').src = ""; document.getElementById('modalVideo').style.display = 'none'; };
 
 async function carregarVideosHome() {
     if (!idCliente) return;
-    const q = query(collection(db, "clientes", idCliente, "conteudos"), orderBy("dataCriacao", "desc"), limit(4));
-    const snap = await getDocs(q);
+    const snap = await getDocs(query(collection(db, "clientes", idCliente, "conteudos"), orderBy("dataCriacao", "desc"), limit(4)));
     const container = document.getElementById('gradeVideos');
     if(!container) return;
     container.innerHTML = "";
-    snap.forEach((doc) => {
-        const v = doc.data();
-        const videoId = extrairVideoID(v.url);
-        if(videoId) {
-            container.innerHTML += `<div class="card-video-premium" onclick="window.abrirVideo('${videoId}')"><img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg"><div class="video-info">${v.serie || 'Conteúdo'}</div></div>`;
-        }
+    snap.forEach(doc => {
+        const v = doc.data(); const id = extrairVideoID(v.url);
+        if(id) container.innerHTML += `<div class="card-video-premium" onclick="window.abrirVideo('${id}')"><img src="https://img.youtube.com/vi/${id}/mqdefault.jpg"><div class="video-info">${v.serie || 'Vídeo'}</div></div>`;
     });
 }
 
 async function carregarTodosVideos() {
     if (!idCliente) return;
-    const q = query(collection(db, "clientes", idCliente, "conteudos"), orderBy("dataCriacao", "desc"));
-    const snap = await getDocs(q);
+    const snap = await getDocs(query(collection(db, "clientes", idCliente, "conteudos"), orderBy("dataCriacao", "desc")));
     const container = document.getElementById('gradeVideosCompleta');
     if(!container) return;
     container.innerHTML = "";
-    snap.forEach((doc) => {
-        const v = doc.data();
-        const videoId = extrairVideoID(v.url);
-        if(videoId) {
-            container.innerHTML += `<div class="card-video-premium" onclick="window.abrirVideo('${videoId}')"><img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg"><div class="video-info">${v.serie || 'Conteúdo'}</div></div>`;
-        }
+    snap.forEach(doc => {
+        const v = doc.data(); const id = extrairVideoID(v.url);
+        if(id) container.innerHTML += `<div class="card-video-premium" onclick="window.abrirVideo('${id}')"><img src="https://img.youtube.com/vi/${id}/mqdefault.jpg"><div class="video-info">${v.serie || 'Vídeo'}</div></div>`;
     });
 }
 
-// --- ANOTAÇÕES ---
 window.abrirModalNota = (id = null, titulo = '', texto = '') => {
     document.getElementById('notaId').value = id || '';
     document.getElementById('notaTitulo').value = titulo || '';
@@ -532,53 +450,34 @@ window.abrirModalNota = (id = null, titulo = '', texto = '') => {
 window.fecharModalNota = () => { document.getElementById('modalNota').style.display = 'none'; };
 
 window.salvarNota = async () => {
-    const user = auth.currentUser;
-    if (!user) return alert("Faça login.");
+    const user = auth.currentUser; if (!user) return;
     const id = document.getElementById('notaId').value;
-    const titulo = document.getElementById('notaTitulo').value;
-    const texto = document.getElementById('notaTexto').value;
-    const notaData = { titulo, texto, userId: user.uid, idCliente: idCliente, dataAtualizacao: new Date() };
-    try {
-        if (id) { await updateDoc(doc(db, "anotacoes_membros", id), notaData); } 
-        else { await addDoc(collection(db, "anotacoes_membros"), { ...notaData, dataCriacao: new Date() }); }
-        window.fecharModalNota();
-    } catch (e) { console.error(e); }
+    const data = { titulo: document.getElementById('notaTitulo').value, texto: document.getElementById('notaTexto').value, userId: user.uid, idCliente, dataAtualizacao: new Date() };
+    id ? await updateDoc(doc(db, "anotacoes_membros", id), data) : await addDoc(collection(db, "anotacoes_membros"), { ...data, dataCriacao: new Date() });
+    window.fecharModalNota();
 };
 
-window.excluirNota = async () => {
-    const id = document.getElementById('notaId').value;
-    if (id && confirm("Deseja excluir?")) { await deleteDoc(doc(db, "anotacoes_membros", id)); window.fecharModalNota(); }
-};
+window.excluirNota = async () => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "anotacoes_membros", document.getElementById('notaId').value)); window.fecharModalNota(); } };
 
 function escutarAnotacoes() {
-    const user = auth.currentUser;
-    if (!user) return;
-    const q = query(collection(db, "anotacoes_membros"), where("userId", "==", user.uid), where("idCliente", "==", idCliente), orderBy("dataAtualizacao", "desc"));
+    const user = auth.currentUser; if (!user) return;
     if (unsubscribeAnotacoes) unsubscribeAnotacoes();
-    unsubscribeAnotacoes = onSnapshot(q, (snapshot) => {
-        const container = document.getElementById('gradeAnotacoes');
-        if (!container) return;
-        container.innerHTML = "";
-        snapshot.forEach((doc) => {
-            const n = doc.data();
-            container.innerHTML += `<div class="card-nota" onclick="window.abrirModalNota('${doc.id}', '${n.titulo}', '${n.texto}')"><h4>${n.titulo}</h4><p>${n.texto}</p></div>`;
-        });
+    unsubscribeAnotacoes = onSnapshot(query(collection(db, "anotacoes_membros"), where("userId", "==", user.uid), where("idCliente", "==", idCliente), orderBy("dataAtualizacao", "desc")), (snap) => {
+        const container = document.getElementById('gradeAnotacoes'); if(!container) return; container.innerHTML = "";
+        snap.forEach(doc => { const n = doc.data(); container.innerHTML += `<div class="card-nota" onclick="window.abrirModalNota('${doc.id}', '${n.titulo}', '${n.texto}')"><h4>${n.titulo}</h4><p>${n.texto}</p></div>`; });
     });
 }
 
-// --- BÍBLIA ---
 window.abrirSeletorLivros = () => {
     const container = document.getElementById('containerSelecao');
-    document.getElementById('resultadoBiblia').style.display = 'none';
-    container.style.display = 'grid';
-    container.innerHTML = livrosBiblia.map(livro => `<button onclick="window.selecionarCapitulo('${livro}')">${livro}</button>`).join('');
+    document.getElementById('resultadoBiblia').style.display = 'none'; container.style.display = 'grid';
+    container.innerHTML = livrosBiblia.map(l => `<button onclick="window.selecionarCapitulo('${l}')">${l}</button>`).join('');
 };
 
 window.selecionarCapitulo = (livro) => {
-    livroSelecionado = livro;
-    const container = document.getElementById('containerSelecao');
-    container.innerHTML = `<div style="grid-column:1/-1; color:var(--cor-primaria)">${livro}: Escolha o Capítulo</div>`;
-    for(let i = 1; i <= 50; i++) { container.innerHTML += `<button onclick="window.finalizarSelecao('${livro}', ${i})">${i}</button>`; }
+    livroSelecionado = livro; const container = document.getElementById('containerSelecao');
+    container.innerHTML = `<div style="grid-column:1/-1; color:var(--cor-primaria)">${livro}</div>`;
+    for(let i = 1; i <= 50; i++) container.innerHTML += `<button onclick="window.finalizarSelecao('${livro}', ${i})">${i}</button>`;
 };
 
 window.finalizarSelecao = (livro, cap) => {
@@ -588,92 +487,55 @@ window.finalizarSelecao = (livro, cap) => {
 };
 
 window.buscarBiblia = async (tipo, valorManual = null) => {
-    const resContainer = document.getElementById('resultadoBiblia');
+    const res = document.getElementById('resultadoBiblia');
     let busca = valorManual || document.getElementById('inputPalavra').value;
     if (!busca) return;
-    resContainer.innerHTML = "Buscando...";
     try {
-        const response = await fetch(`https://bible-api.com/${encodeURIComponent(busca)}?translation=almeida`);
-        const data = await response.json();
-        if (data.verses) { resContainer.innerHTML = data.verses.map(v => `<p><strong>${v.verse}</strong> ${v.text}</p>`).join(''); }
-    } catch (e) { resContainer.innerHTML = "Erro ao buscar."; }
+        const data = await (await fetch(`https://bible-api.com/${encodeURIComponent(busca)}?translation=almeida`)).json();
+        if (data.verses) res.innerHTML = data.verses.map(v => `<p><strong>${v.verse}</strong> ${v.text}</p>`).join('');
+    } catch (e) { res.innerHTML = "Erro."; }
 };
 
-// --- NOTÍCIAS ---
 async function carregarNoticiasHome() {
     if (!idCliente) return;
-    const q = query(collection(db, "clientes", idCliente, "noticias"), orderBy("dataCriacao", "desc"), limit(6));
-    const snap = await getDocs(q);
-    const container = document.getElementById('gradeNoticias');
-    if(!container) return;
-    container.innerHTML = "";
-    snap.forEach((doc) => {
+    const snap = await getDocs(query(collection(db, "clientes", idCliente, "noticias"), orderBy("dataCriacao", "desc"), limit(6)));
+    const container = document.getElementById('gradeNoticias'); if(!container) return; container.innerHTML = "";
+    snap.forEach(doc => {
         const n = doc.data();
-        container.innerHTML += `
-            <div class="card-reflexao-premium" onclick="window.abrirReflexao('${JSON.stringify(n).replace(/"/g, '&quot;')}')">
-                <img src="${n.capa}">
-                <div class="video-info">${n.titulo}</div>
-            </div>`;
+        container.innerHTML += `<div class="card-reflexao-premium" onclick="window.abrirReflexao('${JSON.stringify(n).replace(/"/g, '&quot;')}')"><img src="${n.capa}"><div class="video-info">${n.titulo}</div></div>`;
     });
 }
 
 window.abrirReflexao = (jsonStr) => {
-    const dados = JSON.parse(jsonStr);
-    document.getElementById('modalImagem').src = dados.capa;
-    document.getElementById('modalTitulo').innerText = dados.titulo;
-    document.getElementById('modalTexto').innerHTML = (dados.texto || "").replace(/\n/g, "<br>");
+    const d = JSON.parse(jsonStr);
+    document.getElementById('modalImagem').src = d.capa;
+    document.getElementById('modalTitulo').innerText = d.titulo;
+    document.getElementById('modalTexto').innerHTML = (d.texto || "").replace(/\n/g, "<br>");
     document.getElementById('modalReflexao').style.display = 'flex';
 };
 
 window.fecharReflexao = () => { document.getElementById('modalReflexao').style.display = 'none'; };
 
-// --- ORAÇÃO (ATUALIZADO COM MENSAGEM DE SUCESSO) ---
 window.enviarPedidoOracao = async () => {
-    const nome = document.getElementById('oracaoNome').value;
     const texto = document.getElementById('oracaoTexto').value;
-    const msgSucesso = document.getElementById('statusOracao'); 
-
-    if (!nome || !texto) return alert("Preencha tudo.");
-    
-    try {
-        await addDoc(collection(db, "clientes", idCliente, "pedidos_oracao"), {
-            nome, pedido: texto, userId: auth.currentUser.uid, status: "pendente", idCliente, dataCriacao: new Date()
-        });
-        
-        document.getElementById('oracaoTexto').value = "";
-        
-        if(msgSucesso) {
-            msgSucesso.innerText = "Sua oração foi enviada!";
-            msgSucesso.style.display = "block";
-            msgSucesso.style.color = "var(--cor-primaria)";
-            setTimeout(() => { msgSucesso.style.display = "none"; }, 5000);
-        }
-    } catch (e) { 
-        console.error(e); 
-        alert("Erro ao enviar pedido.");
-    }
+    if (!texto) return;
+    await addDoc(collection(db, "clientes", idCliente, "pedidos_oracao"), {
+        nome: auth.currentUser.displayName || "Membro", pedido: texto, userId: auth.currentUser.uid, status: "pendente", idCliente, dataCriacao: new Date()
+    });
+    document.getElementById('oracaoTexto').value = ""; alert("Pedido enviado!");
 };
 
 function escutarMeusPedidosOracao() {
-    const user = auth.currentUser;
-    if (!user) return;
-    const q = query(collection(db, "clientes", idCliente, "pedidos_oracao"), where("userId", "==", user.uid), orderBy("dataCriacao", "desc"), limit(10));
-    onSnapshot(q, (snapshot) => {
-        const container = document.getElementById('meusPedidosLista');
-        if (!container) return;
-        container.innerHTML = "";
-        snapshot.forEach((doc) => {
-            const p = doc.data();
-            container.innerHTML += `<div style="border-left:4px solid ${p.status === 'pendente' ? 'orange' : 'green'}; padding:10px; margin-bottom:10px;">${p.pedido}</div>`;
-        });
+    const user = auth.currentUser; if (!user) return;
+    onSnapshot(query(collection(db, "clientes", idCliente, "pedidos_oracao"), where("userId", "==", user.uid), orderBy("dataCriacao", "desc"), limit(10)), (snap) => {
+        const c = document.getElementById('meusPedidosLista'); if(!c) return; c.innerHTML = "";
+        snap.forEach(doc => { const p = doc.data(); c.innerHTML += `<div style="border-left:4px solid ${p.status === 'pendente' ? 'orange' : 'green'}; padding:10px; margin-bottom:10px; background: #1a1a1a;">${p.pedido}</div>`; });
     });
 }
 
-// --- PERFIL ---
 window.toggleDataCasamento = () => {
-    const status = document.getElementById('perfilCasado').value;
-    const divCasamento = document.getElementById('divDataCasamento');
-    if(divCasamento) divCasamento.style.display = (status === 'sim') ? 'block' : 'none';
+    const s = document.getElementById('perfilCasado').value;
+    if(document.getElementById('divDataCasamento')) document.getElementById('divDataCasamento').style.display = (s === 'sim') ? 'block' : 'none';
 };
 
 inicializarApp();
